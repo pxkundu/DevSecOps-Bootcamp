@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: supply-us
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+    spec:
+      containers:
+      - name: inventory-service
+        image: <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/inventory-service:latest
+        ports:
+        - containerPort: 4000
+        env:
+        - name: DB_HOST
+          value: "<rds-endpoint>"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-key-secret
+              key: api-key

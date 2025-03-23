@@ -1,11 +1,3 @@
-# DevSecOps-Bootcamp
-6-week DevSecOps bootcamp with step-by-step instructions for participants to follow. Used out-of-the-box approach intact, blending foundational learning with chaos, gamification, and real-world simulation.
-
-Below is a detailed breakdown of each day’s activities for the 6-week bootcamp, with step-by-step instructions for participants to follow. 
-
-I’ve kept the out-of-the-box approach intact, blending foundational learning with chaos, gamification, and real-world simulation. Each day is structured for 4-6 hours, with clear tasks, tools, and processes to guide intermediate AWS DevOps and Cloud Engineers.
-
----
 
 ### Week 1: Core AWS Foundations with a Twist
 **Goal**: Build AWS basics with light chaos to spark engagement.
@@ -180,49 +172,9 @@ I’ve kept the out-of-the-box approach intact, blending foundational learning w
 
 ---
 
-### Weeks 2-6: Summary with Similar Detail Available
-To avoid overwhelming this response, here’s a high-level breakdown for the remaining weeks. I can expand any day with step-by-step instructions if you’d like!
-
-#### Week 2: Infrastructure as Code and Containers
-- **Day 1**: CloudFormation Basics - Write a template, deploy EC2 + RDS, fix a random error.
-- **Day 2**: Terraform Intro - Rebuild Day 1 stack, race against peers.
-- **Day 3**: Docker Fundamentals - Build/run a container, solve an escape room challenge.
-- **Day 4**: Containers on ECS - Deploy to Fargate, scale after a traffic spike.
-- **Day 5**: Mini-Hackathon - IaC + ECS app, recover from Chaos Monkey.
-
-#### Week 3: CI/CD and Serverless with Incident Drills
-- **Day 1**: CI/CD Basics - GitHub Actions pipeline, rollback a bad commit.
-- **Day 2**: AWS CodeSuite - CodePipeline for ECS, fix a prod outage.
-- **Day 3**: Serverless Foundations - Lambda API, secure from a rival “hack.”
-- **Day 4**: Pipeline Under Pressure - Multi-stage deploy, add a feature mid-build.
-- **Day 5**: Incident Showdown - Fix a cascading failure, write a post-mortem.
-
-#### Week 4: Scalability and Monitoring with Chaos
-- **Day 1**: Load Balancing - ALB setup, tune for a surge.
-- **Day 2**: Autoscaling - Add autoscaling, recover a terminated instance.
-- **Day 3**: CloudWatch - Monitor ECS, solve a performance mystery.
-- **Day 4**: EKS Intro - Deploy to EKS, heal a crashed pod.
-- **Day 5**: Resilience Rally - Scalable app, survive a chaos test.
-
-#### Week 5: Security, Cost, and Troubleshooting
-- **Day 1**: Security Basics - Encrypt S3/RDS, fix an exposed bucket.
-- **Day 2**: Disaster Recovery - Multi-AZ RDS, failover after outage.
-- **Day 3**: Cost Optimization - Cut costs, avoid “firing” for overspending.
-- **Day 4**: Troubleshooting - Debug with X-Ray, solve a gauntlet.
-- **Day 5**: Mini-Project - Secure app with DR, pass a peer audit.
-
-#### Week 6: Capstone and Real-World Crunch
-- **Day 1**: Capstone Kickoff - Plan microservices, swap a tool mid-plan.
-- **Day 2**: Build and Automate - CI/CD + EKS, scale for a DDoS.
-- **Day 3**: Secure and Monitor - Add encryption/alarms, pass a pen test.
-- **Day 4**: Chaos Crunch - Survive outages/spikes, write a runbook.
-- **Day 5**: Prod Push - Demo to “execs,” score on resilience/creativity.
-
----
-
 ### Notes
 - **Tools**: AWS CLI, Terraform, Docker, GitHub Actions, etc., installed locally or in a provided sandbox.
 - **Chaos Triggers**: Instructors use scripts or manual interventions (e.g., terminate resources, change configs).
 - **Support**: Daily war rooms + “mentor hotline” for stuck participants.
 
-This breakdown ensures basics are covered with clear steps, while the chaos and gamification keep it engaging and real-world-focused.
+This breakdown ensures basics are covered with clear steps, while the chaos and gamification keep it engaging and real-world-focused. Let me know if you want a specific day expanded further!

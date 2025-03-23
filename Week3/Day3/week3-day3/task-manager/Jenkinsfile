@@ -1,0 +1,99 @@
+@Library('pipeline-lib@1.2') _
+pipeline {
+    agent none
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Git branch')
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Deployment env')
+    }
+    environment {
+        APP_NAME = 'task-manager'
+        GIT_REPO = 'https://github.com/<your-username>/task-manager.git'
+        BACKEND_IMAGE = "task-backend:${BUILD_NUMBER}"
+        FRONTEND_IMAGE = "task-frontend:${BUILD_NUMBER}"
+        PREV_BACKEND_IMAGE = "task-backend:${BUILD_NUMBER.toInteger() - 1}"
+        PREV_FRONTEND_IMAGE = "task-frontend:${BUILD_NUMBER.toInteger() - 1}"
+        S3_BUCKET = '<your-bucket>'
+    }
+    stages {
+        stage('Setup') {
+            agent { label 'docker-slave-east' }
+            steps {
+                withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+                    script {
+                        def githubSecret = sh(script: 'aws secretsmanager get-secret-value --secret-id github-token --query SecretString --output text', returnStdout: true).trim()
+                        def githubCreds = readJSON text: githubSecret
+                        env.GIT_USER = githubCreds.username
+                        env.GIT_TOKEN = githubCreds.token
+                    }
+                    git url: "${GIT_REPO}", branch: "${BRANCH_NAME}", credentialsId: 'github-token'
+                }
+                sh 'chmod +x scripts/*.sh'
+                sh './scripts/install_base.sh'
+                sh './scripts/install_nginx.sh'
+                sh './scripts/install_nodejs.sh'
+                sh './scripts/config_docker.sh'
+            }
+        }
+        stage('Build and Scan') {
+            parallel {
+                stage('Backend East') {
+                    agent { label 'docker-slave-east' }
+                    steps {
+                        buildDocker("${BACKEND_IMAGE}", 'backend', 'us-east-1')
+                        scanImage("${BACKEND_IMAGE}")
+                    }
+                }
+                stage('Frontend West') {
+                    agent { label 'docker-slave-west' }
+                    steps {
+                        buildDocker("${FRONTEND_IMAGE}", 'frontend', 'us-west-2')
+                        scanImage("${FRONTEND_IMAGE}")
+                    }
+                }
+            }
+        }
+        stage('Approval') {
+            when { expression { params.ENVIRONMENT == 'prod' && BRANCH_NAME == 'main' } }
+            steps {
+                input message: 'Approve prod deploy?', submitter: 'ops-team'
+            }
+        }
+        stage('Deploy') {
+            when { expression { params.ENVIRONMENT == 'prod' && BRANCH_NAME == 'main' } }
+            parallel {
+                stage('Backend') {
+                    agent { label 'docker-slave-east' }
+                    steps {
+                        deployEC2("${BACKEND_IMAGE}", 'TaskManagerBackend', "${PREV_BACKEND_IMAGE}")
+                    }
+                }
+                stage('Frontend') {
+                    agent { label 'docker-slave-east' }
+                    steps {
+                        deployEC2("${FRONTEND_IMAGE}", 'TaskManagerFrontend', "${PREV_FRONTEND_IMAGE}")
+                        withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+                            sh "ssh -i ~/.ssh/jenkins_master_key ec2-user@$(aws ec2 describe-instances --filters Name=tag:Name,Values=TaskManagerFrontend --query 'Reservations[0].Instances[0].PublicIpAddress' --output text) 'sudo systemctl restart nginx'"
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            sh 'docker logs task-backend > backend.log 2>&1 || true'
+            sh 'docker logs task-frontend > frontend.log 2>&1 || true'
+            logToCloudWatch('backend.log', 'backend')
+            logToCloudWatch('frontend.log', 'frontend')
+            withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+                sh "aws s3 cp backend.log s3://${S3_BUCKET}/logs/backend-${BUILD_NUMBER}.log"
+                sh "aws s3 cp frontend.log s3://${S3_BUCKET}/logs/frontend-${BUILD_NUMBER}.log"
+            }
+            archiveArtifacts artifacts: '*.log', allowEmptyArchive: true
+            sh 'rm -f *.log'
+        }
+        success {
+            slackSend(channel: '#devops', message: "Pipeline succeeded for ${APP_NAME} - ${BRANCH_NAME} in ${ENVIRONMENT}")
+        }
+    }
+}

@@ -1,0 +1,15 @@
+name: Terraform Validation
+on:
+  pull_request:
+    branches: [main, dev, staging]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+      - run: terraform fmt -check
+      - run: terraform init -backend-config="bucket=crm-tf-state-2025" -backend-config="region=us-east-1"
+      - run: terraform validate

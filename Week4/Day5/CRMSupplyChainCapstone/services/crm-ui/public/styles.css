@@ -1,0 +1,14 @@
+body { font-family: Arial, sans-serif; margin: 0; }
+header { background: #333; color: white; padding: 10px; text-align: center; }
+.container { display: flex; }
+nav { width: 20%; background: #f4f4f4; padding: 10px; }
+nav ul { list-style: none; padding: 0; }
+nav a { text-decoration: none; color: #333; }
+main { width: 80%; padding: 20px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background: #f4f4f4; }
+.error { color: red; }
+form { margin-top: 20px; }
+label { display: block; margin: 5px 0; }
+input, button { padding: 5px; margin: 5px 0; }

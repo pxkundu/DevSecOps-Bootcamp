@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+  namespace: supply-us
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: analytics-service
+  template:
+    metadata:
+      labels:
+        app: analytics-service
+    spec:
+      containers:
+      - name: analytics-service
+        image: <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/analytics-service:latest
+        ports:
+        - containerPort: 10000
+        env:
+        - name: LOGISTICS_SERVICE_URL
+          value: "http://logistics-service.supply-us.svc.cluster.local:5000"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-key-secret
+              key: api-key
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "500m"

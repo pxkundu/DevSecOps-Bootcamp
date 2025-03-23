@@ -1,0 +1,15 @@
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Keep only latest",
+      "selection": {
+        "tagStatus": "tagged",
+        "tagPrefixList": ["task-backend-", "task-frontend-", "task-nginx-"],
+        "countType": "imageCountMoreThan",
+        "countNumber": 1
+      },
+      "action": { "type": "expire" }
+    }
+  ]
+}

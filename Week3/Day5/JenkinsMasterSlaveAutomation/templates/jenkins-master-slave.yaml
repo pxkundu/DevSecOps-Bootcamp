@@ -1,0 +1,233 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Jenkins Master-Slave Architecture with Amazon Linux 2
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+  InstanceType:
+    Type: String
+    Default: t3.medium
+  JenkinsSecretId:
+    Type: String
+    Default: github-ssh-key
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: JenkinsVPC
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: PublicSubnet
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      AllocationId: !GetAtt EIP.AllocationId
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+  PrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
+
+  JenkinsMasterSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Jenkins Master
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+
+  JenkinsSlaveSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Jenkins Slave
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  JenkinsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: JenkinsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:*
+                  - secretsmanager:GetSecretValue
+                Resource: '*'
+
+  JenkinsInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref JenkinsRole
+
+  JenkinsMasterEBS:
+    Type: AWS::EC2::Volume
+    Properties:
+      Size: 20
+      VolumeType: gp3
+      AvailabilityZone: !GetAtt JenkinsMaster.AvailabilityZone
+      Tags:
+        - Key: Name
+          Value: JenkinsMasterEBS
+
+  JenkinsMasterVolumeAttachment:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref JenkinsMaster
+      VolumeId: !Ref JenkinsMasterEBS
+      Device: /dev/xvdf
+
+  JenkinsMaster:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SubnetId: !Ref PrivateSubnet
+      SecurityGroupIds:
+        - !Ref JenkinsMasterSG
+      IamInstanceProfile: !Ref JenkinsInstanceProfile
+      ImageId: ami-08b5b3a93ed654d19  # Amazon Linux 2 in us-east-1
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          sudo dnf install java-17-amazon-corretto -y
+          yum install -y awscli git
+          wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+          rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+          yum install -y jenkins
+          systemctl start jenkins
+          systemctl enable jenkins
+          mkfs.ext4 /dev/xvdf
+          mkdir -p /var/lib/jenkins
+          mount /dev/xvdf /var/lib/jenkins
+          chown jenkins:jenkins /var/lib/jenkins
+          mkdir -p /var/lib/jenkins/.ssh
+          aws secretsmanager get-secret-value --secret-id ${JenkinsSecretId} --region us-east-1 --query SecretString --output text > /var/lib/jenkins/.ssh/id_rsa
+          chmod 600 /var/lib/jenkins/.ssh/id_rsa
+          ssh-keyscan -H github.com >> /var/lib/jenkins/.ssh/known_hosts
+          chown -R jenkins:jenkins /var/lib/jenkins/.ssh
+          systemctl restart jenkins
+      Tags:
+        - Key: Name
+          Value: JenkinsMaster
+
+  JenkinsSlave:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref JenkinsSlaveSG
+      IamInstanceProfile: !Ref JenkinsInstanceProfile
+      ImageId: ami-08b5b3a93ed654d19
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          sudo dnf install java-17-amazon-corretto docker -y
+          systemctl start docker
+          systemctl enable docker
+          usermod -aG docker ec2-user
+          mkdir -p /home/ec2-user/jenkins
+          cd /home/ec2-user/jenkins
+          curl -O http://${JenkinsMaster.PrivateIp}:8080/jnlpJars/agent.jar
+          java -jar agent.jar -jnlpUrl http://${JenkinsMaster.PrivateIp}:8080/computer/slave1/jenkins-agent.jnlp -secret REPLACE_WITH_SECRET -workDir /home/ec2-user/jenkins
+      Tags:
+        - Key: Name
+          Value: JenkinsSlave
+
+Outputs:
+  MasterPublicIP:
+    Description: Public IP of Jenkins Master
+    Value: !GetAtt JenkinsMaster.PublicIp
+  SlavePublicIP:
+    Description: Public IP of Jenkins Slave
+    Value: !GetAtt JenkinsSlave.PublicIp
+  JenkinsURL:
+    Description: Jenkins URL
+    Value: !Sub http://${JenkinsMaster.PublicIp}:8080

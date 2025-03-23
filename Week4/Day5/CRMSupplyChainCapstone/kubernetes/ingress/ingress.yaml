@@ -1,0 +1,69 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: supplychain-ingress
+  namespace: supply-us
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: supplychain-crm.globalretail.com
+    http:
+      paths:
+      - path: /crm
+        pathType: Prefix
+        backend:
+          service:
+            name: crm-ui
+            port:
+              number: 7000
+      - path: /api/crm
+        pathType: Prefix
+        backend:
+          service:
+            name: crm-api
+            port:
+              number: 3000
+      - path: /tracking
+        pathType: Prefix
+        backend:
+          service:
+            name: tracking-ui
+            port:
+              number: 8000
+      - path: /api/logistics
+        pathType: Prefix
+        backend:
+          service:
+            name: logistics-service
+            port:
+              number: 5000
+      - path: /api/order
+        pathType: Prefix
+        backend:
+          service:
+            name: order-service
+            port:
+              number: 6000
+      - path: /api/inventory
+        pathType: Prefix
+        backend:
+          service:
+            name: inventory-service
+            port:
+              number: 4000
+      - path: /api/crm-analytics
+        pathType: Prefix
+        backend:
+          service:
+            name: crm-analytics
+            port:
+              number: 9000
+      - path: /api/supply-analytics
+        pathType: Prefix
+        backend:
+          service:
+            name: analytics-service
+            port:
+              number: 10000

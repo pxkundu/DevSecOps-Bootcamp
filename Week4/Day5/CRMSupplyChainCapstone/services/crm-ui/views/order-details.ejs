@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Details</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Order Details</h1>
+  </header>
+  <div class="container">
+    <main>
+      <% if (error) { %>
+        <p class="error"><%= error %></p>
+      <% } else if (order) { %>
+        <p>Order ID: <%= order.id %></p>
+        <p>Product ID: <%= order.product_id %></p>
+        <p>Quantity: <%= order.quantity %></p>
+        <p>Status: <%= order.status %></p>
+        <% if (order.shipment_id) { %>
+          <p>Shipment ID: <%= order.shipment_id %></p>
+          <p>Shipment Status: <%= order.shipment_status %></p>
+        <% } %>
+      <% } %>
+      <a href="/">Back to Dashboard</a>
+    </main>
+  </div>
+</body>
+</html>

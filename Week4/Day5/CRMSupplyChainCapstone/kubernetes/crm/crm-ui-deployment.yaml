@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crm-ui
+  namespace: crm-us
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crm-ui
+  template:
+    metadata:
+      labels:
+        app: crm-ui
+    spec:
+      containers:
+      - name: crm-ui
+        image: <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/crm-ui:latest
+        ports:
+        - containerPort: 7000
+        env:
+        - name: CRM_API_URL
+          value: "http://crm-api.crm-us.svc.cluster.local:3000"
+        - name: ORDER_SERVICE_URL
+          value: "http://order-service.crm-us.svc.cluster.local:6000"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-key-secret
+              key: api-key

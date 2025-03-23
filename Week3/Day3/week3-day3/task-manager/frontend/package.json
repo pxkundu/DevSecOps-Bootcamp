@@ -1,0 +1,11 @@
+{
+  "name": "task-frontend",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "axios": "^0.21.1"
+  },
+  "scripts": {
+    "start": "node app.js"
+  }
+}

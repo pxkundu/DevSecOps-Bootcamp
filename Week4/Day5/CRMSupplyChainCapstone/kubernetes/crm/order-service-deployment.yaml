@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: crm-us
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+      - name: order-service
+        image: <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/order-service:latest
+        ports:
+        - containerPort: 6000
+        env:
+        - name: INVENTORY_SERVICE_URL
+          value: "http://inventory-service.supply-us.svc.cluster.local:4000"
+        - name: LOGISTICS_SERVICE_URL
+          value: "http://logistics-service.supply-us.svc.cluster.local:5000"
+        - name: DB_HOST
+          value: "<rds-endpoint>"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-key-secret
+              key: api-key

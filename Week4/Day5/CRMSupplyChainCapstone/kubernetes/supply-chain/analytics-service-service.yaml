@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics-service
+  namespace: supply-us
+spec:
+  selector:
+    app: analytics-service
+  ports:
+  - port: 10000
+    targetPort: 10000
+  type: ClusterIP

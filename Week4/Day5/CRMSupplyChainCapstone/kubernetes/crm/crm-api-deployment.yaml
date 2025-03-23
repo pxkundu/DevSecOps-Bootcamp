@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crm-api
+  namespace: crm-us
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crm-api
+  template:
+    metadata:
+      labels:
+        app: crm-api
+    spec:
+      containers:
+      - name: crm-api
+        image: <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/crm-api:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DB_HOST
+          value: "<rds-endpoint>"
+        - name: DB_USER
+          value: "admin"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db-password
+        - name: DB_NAME
+          value: "crm_supply_db"
+        - name: DB_PORT
+          value: "5432"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-key-secret
+              key: api-key

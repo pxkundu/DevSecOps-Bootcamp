@@ -1,0 +1,10 @@
+body { font-family: Arial, sans-serif; margin: 0; }
+header { background: #333; color: white; padding: 10px; text-align: center; }
+.container { padding: 20px; }
+main { max-width: 600px; margin: 0 auto; }
+.error { color: red; }
+form { margin: 20px 0; }
+label { display: block; margin: 5px 0; }
+input, button { padding: 5px; margin: 5px 0; }
+.shipment-card { border: 1px solid #ddd; padding: 10px; margin: 10px 0; }
+.timeline { margin-top: 10px; }

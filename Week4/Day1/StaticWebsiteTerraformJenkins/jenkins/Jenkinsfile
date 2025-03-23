@@ -1,0 +1,33 @@
+pipeline {
+  agent any
+  environment {
+    S3_BUCKET = "my-static-website-2025"  // Match terraform bucket_name
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: "${env.BRANCH_NAME}", url: 'https://github.com/<your-username>/StaticWebsiteTerraformJenkins.git'
+      }
+    }
+    stage('Build') {
+      steps {
+        dir('react-app') {
+          sh 'npm install'
+          sh 'npm run build'
+        }
+      }
+    }
+    stage('Deploy to S3') {
+      steps {
+        dir('react-app/build') {
+          sh "aws s3 sync . s3://${S3_BUCKET}/${env.BRANCH_NAME} --delete"
+        }
+      }
+    }
+  }
+  post {
+    success {
+      echo "Deployed to: https://${S3_BUCKET}.s3.amazonaws.com/${env.BRANCH_NAME}/index.html"
+    }
+  }
+}

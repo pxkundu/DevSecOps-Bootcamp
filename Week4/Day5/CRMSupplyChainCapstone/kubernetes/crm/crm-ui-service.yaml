@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: crm-ui
+  namespace: crm-us
+spec:
+  selector:
+    app: crm-ui
+  ports:
+  - port: 7000
+    targetPort: 7000
+  type: LoadBalancer

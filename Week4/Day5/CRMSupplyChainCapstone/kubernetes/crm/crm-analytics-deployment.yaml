@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crm-analytics
+  namespace: crm-us
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crm-analytics
+  template:
+    metadata:
+      labels:
+        app: crm-analytics
+    spec:
+      containers:
+      - name: crm-analytics
+        image: <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/crm-analytics:latest
+        ports:
+        - containerPort: 9000
+        env:
+        - name: DB_HOST
+          value: "<rds-endpoint>"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-key-secret
+              key: api-key

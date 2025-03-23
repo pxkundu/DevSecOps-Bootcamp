@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>CRM Dashboard</h1>
+    <p>Welcome, User</p>
+  </header>
+  <div class="container">
+    <nav>
+      <ul>
+        <li><a href="/">Orders</a></li>
+        <li><a href="#">Profile</a></li>
+      </ul>
+    </nav>
+    <main>
+      <% if (error) { %>
+        <p class="error"><%= error %></p>
+      <% } %>
+      <h2>Your Orders</h2>
+      <%- include('partials/order-table', { orders }) %>
+      <h2>Place New Order</h2>
+      <form action="/orders" method="POST">
+        <label for="productId">Product ID:</label>
+        <input type="text" id="productId" name="productId" required>
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" name="quantity" min="1" required>
+        <button type="submit">Place Order</button>
+      </form>
+    </main>
+  </div>
+  <script src="/script.js"></script>
+</body>
+</html>

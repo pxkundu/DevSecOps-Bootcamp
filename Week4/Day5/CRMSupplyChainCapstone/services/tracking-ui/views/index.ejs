@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shipment Tracking</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Shipment Tracking</h1>
+  </header>
+  <div class="container">
+    <main>
+      <form action="/shipments/" method="GET" onsubmit="event.preventDefault(); window.location.href='/shipments/' + document.getElementById('shipmentId').value;">
+        <label for="shipmentId">Shipment ID:</label>
+        <input type="text" id="shipmentId" name="shipmentId" required>
+        <button type="submit">Track</button>
+      </form>
+      <% if (error) { %>
+        <p class="error"><%= error %></p>
+      <% } else if (shipment) { %>
+        <%- include('partials/shipment-card', { shipment }) %>
+        <div class="timeline">
+          <p>Status: <%= shipment.status %></p>
+          <p>Created: <%= shipment.createdAt %></p>
+        </div>
+      <% } %>
+    </main>
+  </div>
+</body>
+</html>

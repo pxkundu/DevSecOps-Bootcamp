@@ -1,0 +1,22 @@
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Product</th>
+      <th>Quantity</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% orders.forEach(order => { %>
+      <tr>
+        <td><%= order.id %></td>
+        <td><%= order.product_id %></td>
+        <td><%= order.quantity %></td>
+        <td><%= order.status %></td>
+        <td><a href="/orders/<%= order.id %>">Details</a></td>
+      </tr>
+    <% }); %>
+  </tbody>
+</table>
