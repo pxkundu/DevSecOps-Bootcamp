@@ -1,0 +1,2 @@
+Test ID,Title,Precondition,Steps,Expected Result,Status
+TC-005,Secure Logout,Logged in,1. Click Logout,Session ends, no data accessible,Pass

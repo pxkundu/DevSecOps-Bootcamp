@@ -1,0 +1,6 @@
+Test Plan: Janssen Patient Portal
+Objective: Ensure login, record retrieval, and logout meet IEC 62304 and GDPR.
+Scope: Functional, regression, and risk-based testing of core features.
+Timeline: March 25-31, 2025
+Resources: 2 testers, Chrome on Windows 10
+Risks: Login failure (High), Data breach (Critical)

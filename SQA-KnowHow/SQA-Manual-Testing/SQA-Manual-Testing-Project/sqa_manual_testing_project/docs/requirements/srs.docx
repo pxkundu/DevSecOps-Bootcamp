@@ -1,0 +1,4 @@
+Software Requirements Specification
+Req-001: User shall log in with valid credentials in <2s.
+Req-002: Invalid login shall show error.
+Req-003: Patient record retrieval shall display data in <3s.

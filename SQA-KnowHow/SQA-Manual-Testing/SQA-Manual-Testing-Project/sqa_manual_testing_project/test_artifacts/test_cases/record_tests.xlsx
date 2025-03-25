@@ -1,0 +1,3 @@
+Test ID,Title,Precondition,Steps,Expected Result,Status
+TC-003,Record Retrieval,Logged in,1. Enter patient ID 'P001' 2. Click Retrieve,Data displays in <3s,Pass
+TC-004,Post-Update Retrieval,Logged in post-update,1. Repeat TC-003,Data displays in <3s,Pass

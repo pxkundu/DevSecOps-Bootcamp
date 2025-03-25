@@ -1,0 +1,3 @@
+Risk ID,Description,Likelihood,Impact,Mitigation
+R1,Login failure,Medium,High,Functional and regression testing
+R2,Data exposure,Low,Critical,Risk-based testing with GDPR data

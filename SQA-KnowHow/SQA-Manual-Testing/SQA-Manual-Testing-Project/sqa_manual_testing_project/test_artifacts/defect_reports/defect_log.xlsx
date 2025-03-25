@@ -1,0 +1,2 @@
+Defect ID,Description,Severity,Priority,Steps to Reproduce,Status
+D-001,Login delay >2s on slow network,Medium,High,Enter valid creds, click Login,Resolved

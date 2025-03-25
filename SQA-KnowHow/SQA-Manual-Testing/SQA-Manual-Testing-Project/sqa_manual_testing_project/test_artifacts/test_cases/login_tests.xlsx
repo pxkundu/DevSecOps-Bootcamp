@@ -1,0 +1,3 @@
+Test ID,Title,Precondition,Steps,Expected Result,Status
+TC-001,Valid Login,User at login page,1. Enter 'user1', 'pass123' 2. Click Login,Dashboard loads in <2s,Pass
+TC-002,Invalid Login,User at login page,1. Enter 'wrong', 'wrong' 2. Click Login,Error: 'Invalid credentials',Pass
