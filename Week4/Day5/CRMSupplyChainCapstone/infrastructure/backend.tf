@@ -1,8 +1,8 @@
 terraform {
   backend "s3" {
-    bucket         = "crm-tf-state-2025"
-    key            = "terraform.tfstate"
+    bucket         = "<your-s3-bucket>"
+    key            = "terraform/state"
     region         = "us-east-1"
-    dynamodb_table = "tf-lock"
+    dynamodb_table = "terraform-locks"
   }
 }

@@ -1,7 +1,2 @@
-variable "region" {
-  type = string
-}
-
-variable "cidr" {
-  type = string
-}
+variable "vpc_cidr" {}
+variable "region" {}

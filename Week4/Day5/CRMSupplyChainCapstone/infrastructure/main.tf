@@ -1,39 +1,26 @@
 provider "aws" {
-  region = "us-east-1"  # Default region for Terraform operations
+  region = var.region
 }
 
-# Multi-region VPCs
 module "vpc" {
-  source   = "./modules/vpc"
-  for_each = var.regions
-  region   = each.key
-  cidr     = each.value.cidr
+  source = "./modules/vpc"
+  vpc_cidr = var.vpc_cidr
+  region   = var.region
 }
 
-# Multi-region EKS clusters
 module "eks" {
-  source     = "./modules/eks"
-  for_each   = var.regions
-  region     = each.key
-  vpc_id     = module.vpc[each.key].vpc_id
-  subnet_ids = module.vpc[each.key].private_subnet_ids
+  source       = "./modules/eks"
+  vpc_id       = module.vpc.vpc_id
+  subnet_ids   = module.vpc.private_subnets
+  cluster_name = var.cluster_name
 }
 
-# RDS in us-east-1 only
 module "rds" {
-  source         = "./modules/rds"
-  vpc_id         = module.vpc["us-east-1"].vpc_id
-  subnet_ids     = module.vpc["us-east-1"].private_subnet_ids
-  db_name        = "crm_supply_db"
-  instance_class = "db.t3.micro"
-}
-
-# ECR repositories for all microservices
-resource "aws_ecr_repository" "services" {
-  for_each = toset([
-    "crm-api", "crm-ui", "crm-analytics",
-    "inventory-service", "logistics-service", "order-service",
-    "analytics-service", "api-gateway"
-  ])
-  name = "supplychain-crm/${each.key}"
+  source          = "./modules/rds"
+  vpc_id          = module.vpc.vpc_id
+  subnet_ids      = module.vpc.private_subnets
+  db_name         = "crm_supply_db"
+  db_username     = "admin"
+  db_password     = var.db_password
+  encryption      = true
 }

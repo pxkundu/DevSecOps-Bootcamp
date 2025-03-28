@@ -1,0 +1,61 @@
+pipeline {
+  agent any
+  environment {
+    AWS_REGION = 'us-east-1'
+    ECR_REPO = '<aws_account_id>.dkr.ecr.us-east-1.amazonaws.com'
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/your-repo/CRMSupplyChainCapstone.git'
+      }
+    }
+    stage('Build Docker Images') {
+      steps {
+        script {
+          def services = ['crm-api', 'crm-ui', 'order-service', 'inventory-service', 'logistics-service', 'tracking-ui']
+          for (service in services) {
+            sh "docker build -t ${ECR_REPO}/${service}:latest ./services/${service}"
+          }
+        }
+      }
+    }
+    stage('Push to ECR') {
+      steps {
+        script {
+          sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO'
+          def services = ['crm-api', 'crm-ui', 'order-service', 'inventory-service', 'logistics-service', 'tracking-ui']
+          for (service in services) {
+            sh "docker push ${ECR_REPO}/${service}:latest"
+          }
+        }
+      }
+    }
+    stage('Terraform Apply') {
+      steps {
+        dir('infrastructure') {
+          sh 'terraform init'
+          sh 'terraform apply -auto-approve -var-file=terraform.tfvars'
+        }
+      }
+    }
+    stage('Deploy to EKS') {
+      steps {
+        sh 'aws eks update-kubeconfig --region $AWS_REGION --name crm-supply-eks'
+        sh 'kubectl apply -f kubernetes/crm/'
+        sh 'kubectl apply -f kubernetes/supply-chain/'
+        sh 'kubectl apply -f kubernetes/ingress/'
+      }
+    }
+    stage('Run Tests') {
+      steps {
+        sh 'bash tests/integration/test-full-flow.sh'
+      }
+    }
+  }
+  post {
+    always {
+      archiveArtifacts artifacts: 'pipeline/*.log', allowEmptyArchive: true
+    }
+  }
+}

@@ -1,16 +1,6 @@
-variable "vpc_id" {
-  type = string
-}
-
-variable "subnet_ids" {
-  type = list(string)
-}
-
-variable "db_name" {
-  type = string
-}
-
-variable "instance_class" {
-  type    = string
-  default = "db.t3.micro"
-}
+variable "vpc_id" {}
+variable "subnet_ids" {}
+variable "db_name" {}
+variable "db_username" {}
+variable "db_password" { sensitive = true }
+variable "encryption" {}
