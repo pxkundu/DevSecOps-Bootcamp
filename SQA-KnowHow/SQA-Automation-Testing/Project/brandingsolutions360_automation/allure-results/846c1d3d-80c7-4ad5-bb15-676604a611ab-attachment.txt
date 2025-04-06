@@ -1,0 +1,4 @@
+
+Screenshot saved to: screenshots/homepage_header_failed.png
+
+Screenshot saved to: screenshots/test_homepage_header.png

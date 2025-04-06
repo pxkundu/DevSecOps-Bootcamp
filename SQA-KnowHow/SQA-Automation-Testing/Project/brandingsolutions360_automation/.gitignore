@@ -199,9 +199,7 @@ safaridriver*
 IEDriverServer*
 
 # Test report related
-report.html
-allure-results/
-allure-report/
+
 .pytest_cache/
 
 # OS and editor specific files
