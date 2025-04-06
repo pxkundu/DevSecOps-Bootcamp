@@ -1,0 +1,4 @@
+selenium
+pytest
+python-dotenv
+pytest-html
