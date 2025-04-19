@@ -1,0 +1,33 @@
+name: Deploy Application
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    - run: |
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
+        docker build -t <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/frontend:latest ./frontend
+        docker build -t <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/backend:latest ./backend
+        docker push <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
+        docker push <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/backend:latest
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - uses: azure/setup-kubectl@v3
+    - run: |
+        aws eks update-kubeconfig --region us-east-1 --name ecomm-cluster
+        kubectl apply -f frontend/kubernetes/
+        kubectl apply -f backend/kubernetes/
+        kubectl apply -f kubernetes/ingress.yaml
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

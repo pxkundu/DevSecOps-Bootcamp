@@ -1,0 +1,25 @@
+replicaCount: 5
+image:
+  repository: <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
+  tag: latest
+frontend:
+  name: frontend
+  port: 80
+backend:
+  name: backend
+  port: 80
+ingress:
+  enabled: true
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: <YOUR_ACM_CERT_ARN>
+  hosts:
+    - host: <YOUR_ALB_DNS>
+      paths:
+        - path: /
+          backend: frontend
+        - path: /inventory
+          backend: backend
+        - path: /orders
+          backend: backend

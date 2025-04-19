@@ -1,0 +1,54 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0, "y": 0, "width": 12, "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/EKS", "CPUUtilization", "ClusterName", "ecomm-cluster" ],
+          [ ".", "MemoryUtilization", ".", "." ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Cluster CPU and Memory"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12, "y": 0, "width": 12, "height": 6,
+      "properties": {
+        "metrics": [
+          [ "EcommMetrics", "OrdersPerMinute" ]
+        ],
+        "view": "bar",
+        "region": "us-east-1",
+        "title": "Orders Per Minute"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0, "y": 6, "width": 12, "height": 6,
+      "properties": {
+        "metrics": [
+          [ "EcommMetrics", "OrderLatency" ]
+        ],
+        "view": "timeSeries",
+        "region": "us-east-1",
+        "title": "Order Latency (ms)"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12, "y": 6, "width": 12, "height": 6,
+      "properties": {
+        "metrics": [
+          [ "EcommMetrics", "Errors5xx" ]
+        ],
+        "view": "timeSeries",
+        "region": "us-east-1",
+        "title": "5xx Errors"
+      }
+    }
+  ]
+}

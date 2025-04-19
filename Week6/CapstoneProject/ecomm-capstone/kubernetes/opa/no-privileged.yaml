@@ -1,0 +1,28 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8sdenyprivileged
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sDenyPrivileged
+  targets:
+  - target: admission.k8s.gatekeeper.sh
+    rego: |
+      package k8sdenyprivileged
+      violation[{"msg": msg}] {
+        input.review.object.spec.containers[_].securityContext.privileged
+        msg := "Privileged pods are not allowed"
+      }
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sDenyPrivileged
+metadata:
+  name: deny-privileged-pods
+spec:
+  match:
+    kinds:
+    - apiGroups: [""]
+      kinds: ["Pod"]
+    namespaces: ["prod"]

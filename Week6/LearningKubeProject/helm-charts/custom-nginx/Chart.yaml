@@ -1,0 +1,16 @@
+apiVersion: v2
+name: custom-nginx
+description: A Helm chart for deploying an Nginx web application
+version: 0.1.0
+appVersion: "1.25"
+type: application
+maintainers:
+  - name: Partha-App
+    email: partha.kundu.tc@gmail.com
+keywords:
+  - nginx
+  - webserver
+  - learning
+home: https://github.com/yourusername/your-repo
+sources:
+  - https://github.com/yourusername/your-repo/tree/main/helm-charts/custom-nginx

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: ecomm
+description: E-commerce platform on AWS EKS
+version: 0.1.0

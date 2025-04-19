@@ -1,0 +1,4 @@
+replicaCount: 2
+ingress:
+  hosts:
+    - host: staging-<YOUR_ALB_DNS>

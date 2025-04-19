@@ -1,0 +1,6 @@
+# Custom values for CloudWatch agent (optional, not used in script but for reference)
+clusterName: "k8s-learning-cluster"
+region: "us-east-1"
+serviceAccount:
+  create: true
+  name: "cloudwatch-agent-sa"

@@ -1,0 +1,4 @@
+# Custom values for Nginx Helm chart (for reference)
+replicaCount: 2
+service:
+  type: NodePort

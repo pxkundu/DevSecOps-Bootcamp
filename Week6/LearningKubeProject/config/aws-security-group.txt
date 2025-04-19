@@ -1,0 +1,10 @@
+Master Inbound:
+- TCP 6443 (API server) from anywhere or worker subnet
+- TCP 2379-2380 (etcd) from master subnet
+- TCP 10250-10252 (kubelet, scheduler, controller) from all nodes
+Worker Inbound:
+- TCP 10250 (kubelet) from all nodes
+- TCP 30000-32767 (NodePort) from anywhere
+All:
+- TCP 22 (SSH) from your IP
+- ICMP (ping) from anywhere

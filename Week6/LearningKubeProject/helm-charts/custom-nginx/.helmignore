@@ -1,0 +1,6 @@
+# Patterns to ignore when packaging the chart
+*.log
+.git
+.gitignore
+README.md
+LICENSE
