@@ -1,0 +1,30 @@
+{
+  "family": "my-app-task",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "my-app",
+      "image": "{{ECR_IMAGE}}",  # Replace with your ECR image URI (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:latest)
+      "memory": 512,
+      "cpu": 256,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/my-app",
+          "awslogs-region": "{{AWS_REGION}}",  # Replace with your AWS region (e.g., us-east-1)
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "memory": "1024",
+  "cpu": "512"
+}

@@ -1,0 +1,101 @@
+Resources:
+  ComplianceScanner:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ComplianceScanner
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+
+          def get_input(prompt):
+              try:
+                  return os.environ.get(prompt) or input(f"Enter {prompt}: ")
+              except EOFError:
+                  raise ValueError(f"{prompt} not provided")
+
+          def lambda_handler(event, context):
+              region = get_input('AWS_REGION')
+              sns_topic_arn = get_input('SNS_TOPIC_ARN')
+              config = boto3.client('config', region_name=region)
+              non_compliant = config.get_compliance_details_by_config_rule(
+                  ConfigRuleName='ebs-encrypted'
+              )['EvaluationResults']
+              issues = [item['Annotation'] for item in non_compliant if item['Compliance']['ComplianceType'] == 'NON_COMPLIANT']
+              if issues:
+                  sns = boto3.client('sns', region_name=region)
+                  sns.publish(
+                      TopicArn=sns_topic_arn,
+                      Message=f"Non-compliant resources:\n{json.dumps(issues, indent=2)}"
+                  )
+              return {'statusCode': 200, 'body': json.dumps('Compliance scan complete')}
+      Runtime: python3.9
+      Timeout: 60
+      Environment:
+        Variables:
+          AWS_REGION: '{{AWS_REGION}}'  # Replace with your AWS region (e.g., us-east-1)
+          SNS_TOPIC_ARN: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ComplianceScanPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - config:GetComplianceDetailsByConfigRule
+                  - config:DescribeConfigRules
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  StepFunction:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: ComplianceRemediation
+      RoleArn: !GetAtt StepFunctionRole.Arn
+      DefinitionString: !Sub |
+        {
+          "StartAt": "Scan",
+          "States": {
+            "Scan": {
+              "Type": "Task",
+              "Resource": "${ComplianceScanner.Arn}",
+              "Next": "Notify"
+            },
+            "Notify": {
+              "Type": "Pass",
+              "End": true
+            }
+          }
+        }
+  StepFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StepFunctionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt ComplianceScanner.Arn

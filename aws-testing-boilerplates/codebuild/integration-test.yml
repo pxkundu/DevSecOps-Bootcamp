@@ -1,0 +1,60 @@
+Resources:
+  IntegrationTestProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: IntegrationTestProject
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/standard:5.0
+        ComputeType: BUILD_GENERAL1_SMALL
+      Source:
+        Type: CODECOMMIT
+        Location: https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-repo
+      BuildSpec: |
+        version: 0.2
+        phases:
+          install:
+            commands:
+              - npm install
+          build:
+            commands:
+              - npm test
+              - curl -f http://my-ecs-service:3000/health || exit 1
+              - if [ $(curl -s -o /dev/null -w "%{http_code}" http://my-ecs-service:3000/secure) -ne 401 ]; then echo "Authentication failure detected"; exit 1; fi
+        reports:
+          test-results:
+            files:
+              - "**/test-results.xml"
+            format: JUNIT
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /codebuild/integration-tests
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - codecommit:GitPull
+                Resource: '*'

@@ -1,0 +1,17 @@
+Resources:
+  CPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm if CPU exceeds 70%"
+      Namespace: AWS/EC2
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: InstanceId
+          Value: '{{EC2_INSTANCE_ID}}'  # Replace with your EC2 instance ID
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 70
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN

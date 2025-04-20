@@ -1,0 +1,87 @@
+Resources:
+  ContainerVulnScanner:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ContainerVulnScanner
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+
+          def get_input(prompt):
+              try:
+                  return os.environ.get(prompt) or input(f"Enter {prompt}: ")
+              except EOFError:
+                  raise ValueError(f"{prompt} not provided")
+
+          def lambda_handler(event, context):
+              region = get_input('AWS_REGION')
+              sns_topic_arn = get_input('SNS_TOPIC_ARN')
+              ecr_repo = get_input('ECR_REPO')
+              inspector = boto3.client('inspector2', region_name=region)
+              ecr = boto3.client('ecr', region_name=region)
+              sns = boto3.client('sns', region_name=region)
+              images = ecr.describe_images(repositoryName=ecr_repo)['imageDetails']
+              issues = []
+              for image in images:
+                  image_arn = f"arn:aws:ecr:{region}:123456789012:repository/{ecr_repo}/image/{image['imageDigest']}"
+                  findings = inspector.list_findings(
+                      filterCriteria={'resourceId': [{'comparison': 'EQUALS', 'value': image_arn}]}
+                  )['findings']
+                  critical = [f for f in findings if f['severity'] in ['CRITICAL', 'HIGH']]
+                  if critical:
+                      issues.append(f"Image {image['imageDigest']}: {len(critical)} critical/high vulnerabilities")
+              if issues:
+                  sns.publish(
+                      TopicArn=sns_topic_arn,
+                      Message=f"Vulnerable containers:\n{json.dumps(issues, indent=2)}"
+                  )
+              return {'statusCode': 200, 'body': json.dumps('Vulnerability scan complete')}
+      Runtime: python3.9
+      Timeout: 60
+      Environment:
+        Variables:
+          AWS_REGION: '{{AWS_REGION}}'  # Replace with your AWS region (e.g., us-east-1)
+          SNS_TOPIC_ARN: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+          ECR_REPO: '{{ECR_REPO}}'  # Replace with your ECR repository name (e.g., my-app-repo)
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: VulnScanPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - inspector2:ListFindings
+                  - ecr:DescribeImages
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Daily container vulnerability scan
+      ScheduleExpression: rate(1 day)
+      Targets:
+        - Arn: !GetAtt ContainerVulnScanner.Arn
+          Id: ContainerVulnScannerTarget
+  PermissionForEvents:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ContainerVulnScanner
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleRule.Arn

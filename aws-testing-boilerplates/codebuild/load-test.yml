@@ -1,0 +1,64 @@
+Resources:
+  LoadTestProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: LoadTestProject
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/standard:5.0
+        ComputeType: BUILD_GENERAL1_MEDIUM
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - npm install -g artillery
+            build:
+              commands:
+                # Set ECS_ENDPOINT as a CodeBuild environment variable or pass via AWS CLI
+                # Example: aws codebuild start-build --project-name LoadTestProject --environment-variables-override "Name=ECS_ENDPOINT,Value=http://my-alb.us-east-1.elb.amazonaws.com"
+                - if [ -z "$ECS_ENDPOINT" ]; then echo "Error: ECS_ENDPOINT not set"; exit 1; fi
+                - artillery quick --count 100 --num 50 $ECS_ENDPOINT/health > load-test-results.txt
+                - if grep -q "errors" load-test-results.txt; then echo "Load test failed"; exit 1; fi
+                - if grep -q "429" load-test-results.txt; then echo "Throttling detected"; exit 1; fi
+          reports:
+            load-test-results:
+              files:
+                - load-test-results.txt
+              format: JUNIT
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /codebuild/load-tests
+      EnvironmentVariables:
+        - Name: ECS_ENDPOINT
+          Value: '{{ECS_ENDPOINT}}'  # Replace with your ECS service endpoint (e.g., http://my-alb.us-east-1.elb.amazonaws.com)
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN

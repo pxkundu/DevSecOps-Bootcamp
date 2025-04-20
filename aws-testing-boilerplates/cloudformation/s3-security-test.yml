@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda to scan S3 buckets for public access or missing encryption. Set SNS_TOPIC_ARN environment variable or enter at runtime.
+Resources:
+  S3SecurityScanner:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: S3SecurityScanner
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          import urllib
+
+          def get_input(prompt):
+              try:
+                  return os.environ.get(prompt) or input(f"Enter {prompt}: ")
+              except EOFError:
+                  raise ValueError(f"{prompt} not provided")
+
+          def lambda_handler(event, context):
+              sns_topic_arn = get_input('SNS_TOPIC_ARN')
+              s3 = boto3.client('s3')
+              sns = boto3.client('sns')
+              buckets = s3.list_buckets()['Buckets']
+              issues = []
+              for bucket in buckets:
+                  name = bucket['Name']
+                  acl = s3.get_bucket_acl(Bucket=name)
+                  public = any(grant['Grantee'].get('URI', '') == 'http://acs.amazonaws.com/groups/global/AllUsers' for grant in acl['Grants'])
+                  encryption = s3.get_bucket_encryption(Bucket=name)
+                  if public:
+                      issues.append(f"Bucket {name} is public")
+                  if not encryption.get('ServerSideEncryptionConfiguration'):
+                      issues.append(f"Bucket {name} lacks encryption")
+              if issues:
+                  sns.publish(
+                      TopicArn=sns_topic_arn,
+                      Message='\n'.join(issues)
+                  )
+              return {'statusCode': 200, 'body': json.dumps('Scan complete')}
+      Runtime: python3.9
+      Timeout: 60
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN or set at runtime
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3SecurityScanPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListAllMyBuckets
+                  - s3:GetBucketAcl
+                  - s3:GetBucketEncryption
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Daily S3 security scan
+      ScheduleExpression: rate(1 day)
+      Targets:
+        - Arn: !GetAtt S3SecurityScanner.Arn
+          Id: S3SecurityScannerTarget
+  PermissionForEvents:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref S3SecurityScanner
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleRule.Arn

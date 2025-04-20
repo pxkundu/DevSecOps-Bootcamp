@@ -1,0 +1,16 @@
+{
+  "AutoScalingGroupName": "{{ECS_SERVICE_NAME}}-autoscaling",  # Replace with your ECS service name
+  "ServiceNamespace": "ecs",
+  "ResourceId": "service/{{ECS_CLUSTER_NAME}}/{{ECS_SERVICE_NAME}}",  # Replace with your ECS cluster and service names
+  "ScalableDimension": "ecs:service:DesiredCount",
+  "MinCapacity": 2,
+  "MaxCapacity": 10,
+  "TargetTrackingScalingPolicyConfiguration": {
+    "TargetValue": 70.0,
+    "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+    },
+    "ScaleOutCooldown": 300,
+    "ScaleInCooldown": 300
+  }
+}

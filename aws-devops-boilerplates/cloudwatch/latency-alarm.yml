@@ -1,0 +1,17 @@
+Resources:
+  LatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm if ALB latency exceeds 1 second"
+      Namespace: AWS/ApplicationELB
+      MetricName: TargetResponseTime
+      Dimensions:
+        - Name: LoadBalancer
+          Value: '{{ALB_ARN_SUFFIX}}'  # Replace with your ALB ARN suffix (e.g., app/my-alb/1234567890abcdef)
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 2
+      Threshold: 1.0
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN

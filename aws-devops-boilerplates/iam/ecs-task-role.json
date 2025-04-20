@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:{{AWS_REGION}}:*:log-group:/ecs/*"  # Replace with your AWS region
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::{{S3_BUCKET_NAME}}",  # Replace with your S3 bucket name
+        "arn:aws:s3:::{{S3_BUCKET_NAME}}/*"
+      ]
+    }
+  ]
+}

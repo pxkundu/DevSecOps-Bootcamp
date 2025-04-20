@@ -1,0 +1,111 @@
+Resources:
+  ChaosStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: ChaosTest
+      RoleArn: !GetAtt StepFunctionRole.Arn
+      DefinitionString: !Sub |
+        {
+          "StartAt": "TerminateInstance",
+          "States": {
+            "TerminateInstance": {
+              "Type": "Task",
+              "Resource": "${ChaosLambda.Arn}",
+              "Next": "Wait",
+              "Parameters": {
+                "InstanceId": "i-1234567890abcdef0"
+              }
+            },
+            "Wait": {
+              "Type": "Wait",
+              "Seconds": 300,
+              "Next": "CheckHealth"
+            },
+            "CheckHealth": {
+              "Type": "Task",
+              "Resource": "${HealthCheckLambda.Arn}",
+              "End": true
+            }
+          }
+        }
+  ChaosLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ChaosLambda
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+
+          def lambda_handler(event, context):
+              ec2 = boto3.client('ec2')
+              instance_id = event['InstanceId']
+              ec2.terminate_instances(InstanceIds=[instance_id])
+              return {'statusCode': 200, 'body': json.dumps('Instance terminated')}
+      Runtime: python3.9
+      Timeout: 30
+  HealthCheckLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: HealthCheckLambda
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+
+          def lambda_handler(event, context):
+              ecs = boto3.client('ecs')
+              response = ecs.describe_services(cluster='my-cluster', services=['my-service'])
+              healthy = response['services'][0]['runningCount'] > 0
+              if not healthy:
+                  sns = boto3.client('sns')
+                  sns.publish(
+                      TopicArn='arn:aws:sns:us-east-1:123456789012:chaos-alerts',
+                      Message='Service unhealthy after chaos test'
+                  )
+              return {'statusCode': 200, 'body': json.dumps('Health check complete')}
+      Runtime: python3.9
+      Timeout: 30
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ChaosPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:TerminateInstances
+                  - ecs:DescribeServices
+                  - sns:Publish
+                Resource: '*'
+  StepFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StepFunctionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: '*'
