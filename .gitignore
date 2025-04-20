@@ -183,7 +183,6 @@ venv/
 env/
 Lib/
 Include/
-Scripts/
 site-packages/
 dist/
 build/
