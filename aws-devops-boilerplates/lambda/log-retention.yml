@@ -1,0 +1,63 @@
+Resources:
+  LogRetentionFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LogRetentionManager
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+
+          def get_input(prompt):
+              try:
+                  return os.environ.get(prompt) or input(f"Enter {prompt}: ")
+              except EOFError:
+                  raise ValueError(f"{prompt} not provided")
+
+          def lambda_handler(event, context):
+              region = get_input('AWS_REGION')
+              sns_topic_arn = get_input('SNS_TOPIC_ARN')
+              logs = boto3.client('logs', region_name=region)
+              sns = boto3.client('sns', region_name=region)
+              log_groups = logs.describe_log_groups()['logGroups']
+              for group in log_groups:
+                  group_name = group['logGroupName']
+                  if 'retentionInDays' not in group or group['retentionInDays'] != 30:
+                      logs.put_retention_policy(logGroupName=group_name, retentionInDays=30)
+                      sns.publish(
+                          TopicArn=sns_topic_arn,
+                          Message=f"Set retention to 30 days for log group {group_name}"
+                      )
+              return {'statusCode': 200, 'body': json.dumps('Log retention updated')}
+      Runtime: python3.9
+      Timeout: 60
+      Environment:
+        Variables:
+          AWS_REGION: '{{AWS_REGION}}'  # Replace with your AWS region
+          SNS_TOPIC_ARN: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LogRetentionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:DescribeLogGroups
+                  - logs:PutRetentionPolicy
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN

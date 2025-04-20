@@ -1,0 +1,21 @@
+{
+  "cluster": "{{ECS_CLUSTER_NAME}}",  # Replace with your ECS cluster name
+  "serviceName": "{{ECS_SERVICE_NAME}}",  # Replace with your ECS service name
+  "taskDefinition": "{{TASK_DEFINITION_ARN}}",  # Replace with your task definition ARN
+  "desiredCount": 2,
+  "launchType": "FARGATE",
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": ["{{SUBNET_ID_1}}", "{{SUBNET_ID_2}}"],  # Replace with your subnet IDs
+      "securityGroups": ["{{SECURITY_GROUP_ID}}"],  # Replace with your security group ID
+      "assignPublicIp": "ENABLED"
+    }
+  },
+  "loadBalancers": [
+    {
+      "targetGroupArn": "{{TARGET_GROUP_ARN}}",  # Replace with your ALB target group ARN
+      "containerName": "my-app",
+      "containerPort": 5000
+    }
+  ]
+}

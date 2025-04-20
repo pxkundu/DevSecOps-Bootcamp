@@ -30,3 +30,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 MIT License. See [LICENSE](LICENSE).
+
+---
+
+*Prepared by {Partha Sarathi Kundu} on April 19, 2025, for the AWS Boilerplate writing project.*

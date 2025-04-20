@@ -1,0 +1,65 @@
+Resources:
+  CodeVulnScanProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: CodeVulnScanProject
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/standard:5.0
+        ComputeType: BUILD_GENERAL1_MEDIUM
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - npm install -g snyk
+            build:
+              commands:
+                # Set REPO_URL as a CodeBuild environment variable or pass via AWS CLI
+                # Example: aws codebuild start-build --project-name CodeVulnScanProject --environment-variables-override "Name=REPO_URL,Value=https://github.com/my-org/my-repo.git"
+                - if [ -z "$REPO_URL" ]; then echo "Error: REPO_URL not set"; exit 1; fi
+                - git clone $REPO_URL repo
+                - cd repo
+                - snyk test --severity-threshold=high > vuln-report.txt
+                - if grep -q "Vulnerabilities found" vuln-report.txt; then echo "Vulnerabilities detected"; exit 1; fi
+          reports:
+            vuln-report:
+              files:
+                - vuln-report.txt
+              format: JUNIT
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /codebuild/code-vuln-scans
+      EnvironmentVariables:
+        - Name: REPO_URL
+          Value: '{{REPO_URL}}'  # Replace with your repository URL (e.g., https://github.com/my-org/my-repo.git)
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN

@@ -1,0 +1,17 @@
+# Build stage
+FROM python:3.9-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --user -r requirements.txt
+COPY . .
+
+# Run stage
+FROM python:3.9-slim
+WORKDIR /app
+COPY --from=builder /root/.local /root/.local
+COPY . .
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
+EXPOSE 5000
+ENV PATH=/root/.local/bin:$PATH
+CMD ["python", "app.py"]

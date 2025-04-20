@@ -1,0 +1,71 @@
+Resources:
+  InfraVulnScanProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: InfraVulnScanProject
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/standard:5.0
+        ComputeType: BUILD_GENERAL1_MEDIUM
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - gem install cfn-nag
+            build:
+              commands:
+                # Set S3_BUCKET_NAME as a CodeBuild environment variable or pass via AWS CLI
+                # Example: aws codebuild start-build --project-name InfraVulnScanProject --environment-variables-override "Name=S3_BUCKET_NAME,Value=my-cfn-templates"
+                - if [ -z "$S3_BUCKET_NAME" ]; then echo "Error: S3_BUCKET_NAME not set"; exit 1; fi
+                - aws s3 cp s3://$S3_BUCKET_NAME/templates/ templates/ --recursive
+                - cfn_nag_scan --input-path templates/ > cfn-nag-report.txt
+                - if grep -q "FAIL" cfn-nag-report.txt; then echo "Security issues detected"; exit 1; fi
+          reports:
+            cfn-nag-report:
+              files:
+                - cfn-nag-report.txt
+              format: JUNIT
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /codebuild/infra-vuln-scans
+      EnvironmentVariables:
+        - Name: S3_BUCKET_NAME
+          Value: '{{S3_BUCKET_NAME}}'  # Replace with your S3 bucket name (e.g., my-cfn-templates)
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - 'arn:aws:s3:::{{S3_BUCKET_NAME}}'
+                  - 'arn:aws:s3:::{{S3_BUCKET_NAME}}/*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN

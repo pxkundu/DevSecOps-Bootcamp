@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudWatch alarm for high-severity GuardDuty findings. Set SNS_TOPIC_ARN before deployment.
+Resources:
+  GuardDutyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm for high-severity GuardDuty findings"
+      Namespace: AWS/GuardDuty
+      MetricName: FindingCount
+      Dimensions:
+        - Name: Severity
+          Value: High
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN

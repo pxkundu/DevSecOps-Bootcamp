@@ -1,0 +1,14 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+      ],
+      "Resource": "arn:aws:ssm:{{AWS_REGION}}:*:parameter/{{SSM_PARAMETER_PATH}}"  # Replace with your region and parameter path (e.g., /my-app/*)
+    }
+  ]
+}

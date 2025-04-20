@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda to audit IAM policies for overly permissive permissions. Set SNS_TOPIC_ARN and AWS_REGION at runtime.
+Resources:
+  IAMPolicyAuditor:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: IAMPolicyAuditor
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+
+          def get_input(prompt):
+              try:
+                  return os.environ.get(prompt) or input(f"Enter {prompt}: ")
+              except EOFError:
+                  raise ValueError(f"{prompt} not provided")
+
+          def lambda_handler(event, context):
+              region = get_input('AWS_REGION')
+              sns_topic_arn = get_input('SNS_TOPIC_ARN')
+              iam = boto3.client('iam', region_name=region)
+              sns = boto3.client('sns', region_name=region)
+              policies = iam.list_policies(Scope='Local')['Policies']
+              issues = []
+              for policy in policies:
+                  policy_arn = policy['Arn']
+                  policy_version = iam.get_policy_version(
+                      PolicyArn=policy_arn,
+                      VersionId=policy['DefaultVersionId']
+                  )['PolicyVersion']['Document']
+                  for statement in policy_version.get('Statement', []):
+                      if statement.get('Effect') == 'Allow' and (
+                          '*' in statement.get('Action', []) or
+                          '*' in statement.get('Resource', [])
+                      ):
+                          issues.append(f"Overly permissive policy: {policy_arn}")
+              if issues:
+                  sns.publish(
+                      TopicArn=sns_topic_arn,
+                      Message='\n'.join(issues)
+                  )
+              return {'statusCode': 200, 'body': json.dumps('IAM policy audit complete')}
+      Runtime: python3.9
+      Timeout: 60
+      Environment:
+        Variables:
+          AWS_REGION: '{{AWS_REGION}}'  # Replace with your AWS region (e.g., us-east-1)
+          SNS_TOPIC_ARN: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: IAMAuditPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:ListPolicies
+                  - iam:GetPolicyVersion
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Daily IAM policy audit
+      ScheduleExpression: rate(1 day)
+      Targets:
+        - Arn: !GetAtt IAMPolicyAuditor.Arn
+          Id: IAMPolicyAuditorTarget
+  PermissionForEvents:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref IAMPolicyAuditor
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleRule.Arn

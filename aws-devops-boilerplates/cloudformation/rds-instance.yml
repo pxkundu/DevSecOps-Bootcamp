@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: RDS PostgreSQL instance with encryption. Replace {{AWS_REGION}} and {{SNS_TOPIC_ARN}} before deployment.
+Resources:
+  RDSDatabase:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: my-postgres-db
+      Engine: postgres
+      EngineVersion: '13.7'
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 20
+      StorageEncrypted: true
+      MasterUsername: admin
+      MasterUserPassword: '{{DB_PASSWORD}}'  # Replace with your password or use Secrets Manager
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+      EnablePerformanceInsights: true
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+        - '{{SUBNET_ID_1}}'  # Replace with your private subnet ID
+        - '{{SUBNET_ID_2}}'  # Replace with another private subnet ID
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for RDS
+      VpcId: '{{VPC_ID}}'  # Replace with your VPC ID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 10.0.0.0/16

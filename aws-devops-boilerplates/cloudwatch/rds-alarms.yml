@@ -1,0 +1,33 @@
+Resources:
+  CPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm if RDS CPU exceeds 80%"
+      Namespace: AWS/RDS
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: '{{RDS_INSTANCE_ID}}'  # Replace with your RDS instance ID
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  StorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm if RDS storage is below 10%"
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: '{{RDS_INSTANCE_ID}}'  # Replace with your RDS instance ID
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 10
+      ComparisonOperator: LessThanThreshold
+      AlarmActions:
+        - '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN

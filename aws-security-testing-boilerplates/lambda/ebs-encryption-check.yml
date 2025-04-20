@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda to verify EBS volumes are encrypted. Set SNS_TOPIC_ARN and AWS_REGION at runtime.
+Resources:
+  EBSEncryptionChecker:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: EBSEncryptionChecker
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+
+          def get_input(prompt):
+              try:
+                  return os.environ.get(prompt) or input(f"Enter {prompt}: ")
+              except EOFError:
+                  raise ValueError(f"{prompt} not provided")
+
+          def lambda_handler(event, context):
+              region = get_input('AWS_REGION')
+              sns_topic_arn = get_input('SNS_TOPIC_ARN')
+              ec2 = boto3.client('ec2', region_name=region)
+              sns = boto3.client('sns', region_name=region)
+              volumes = ec2.describe_volumes()['Volumes']
+              issues = []
+              for volume in volumes:
+                  if not volume.get('Encrypted', False):
+                      issues.append(f"EBS volume {volume['VolumeId']} is not encrypted")
+              if issues:
+                  sns.publish(
+                      TopicArn=sns_topic_arn,
+                      Message='\n'.join(issues)
+                  )
+              return {'statusCode': 200, 'body': json.dumps('EBS encryption check complete')}
+      Runtime: python3.9
+      Timeout: 60
+      Environment:
+        Variables:
+          AWS_REGION: '{{AWS_REGION}}'  # Replace with your AWS region (e.g., us-east-1)
+          SNS_TOPIC_ARN: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: EBSEncryptionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeVolumes
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Daily EBS encryption check
+      ScheduleExpression: rate(1 day)
+      Targets:
+        - Arn: !GetAtt EBSEncryptionChecker.Arn
+          Id: EBSEncryptionCheckerTarget
+  PermissionForEvents:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EBSEncryptionChecker
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleRule.Arn

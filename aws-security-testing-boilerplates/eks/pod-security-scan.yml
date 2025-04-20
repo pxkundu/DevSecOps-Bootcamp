@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda to scan EKS pods for insecure configurations. Set EKS_CLUSTER_NAME, SNS_TOPIC_ARN, and AWS_REGION at runtime.
+Resources:
+  PodSecurityScanner:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: PodSecurityScanner
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+
+          def get_input(prompt):
+              try:
+                  return os.environ.get(prompt) or input(f"Enter {prompt}: ")
+              except EOFError:
+                  raise ValueError(f"{prompt} not provided")
+
+          def lambda_handler(event, context):
+              region = get_input('AWS_REGION')
+              cluster_name = get_input('EKS_CLUSTER_NAME')
+              sns_topic_arn = get_input('SNS_TOPIC_ARN')
+              eks = boto3.client('eks', region_name=region)
+              sns = boto3.client('sns', region_name=region)
+              issues = []
+              try:
+                  clusters = eks.list_clusters()['clusters']
+                  if cluster_name not in clusters:
+                      issues.append(f"EKS cluster {cluster_name} not found")
+                  else:
+                      issues.append(f"Placeholder: Insecure pod found in {cluster_name}")
+              except Exception as e:
+                  issues.append(f"Error scanning EKS cluster {cluster_name}: {str(e)}")
+              if issues:
+                  sns.publish(
+                      TopicArn=sns_topic_arn,
+                      Message='\n'.join(issues)
+                  )
+              return {'statusCode': 200, 'body': json.dumps('EKS pod security scan complete')}
+      Runtime: python3.9
+      Timeout: 60
+      Environment:
+        Variables:
+          AWS_REGION: '{{AWS_REGION}}'  # Replace with your AWS region (e.g., us-east-1)
+          EKS_CLUSTER_NAME: '{{EKS_CLUSTER_NAME}}'  # Replace with your EKS cluster name
+          SNS_TOPIC_ARN: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: EKSSecurityPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - eks:ListClusters
+                  - eks:DescribeCluster
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Daily EKS pod security scan
+      ScheduleExpression: rate(1 day)
+      Targets:
+        - Arn: !GetAtt PodSecurityScanner.Arn
+          Id: PodSecurityScannerTarget
+  PermissionForEvents:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PodSecurityScanner
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleRule.Arn

@@ -105,3 +105,8 @@ Imagine a mobile app:
 - **Automation**: A script runs overnight, testing the app on 10 virtual devices, checking login works across iOS 14, 15, and 16.
 
 Both catch bugs, but in different ways. Manual finds the unexpected; automation ensures the expected stays true.
+
+
+---
+
+*Prepared by {Partha Sarathi Kundu} on April 19, 2025, for the SQA Knowhow project.*

@@ -290,3 +290,8 @@ To avoid overwhelming this response, here’s a high-level breakdown for the rem
 - **Support**: Daily war rooms + “mentor hotline” for stuck participants.
 
 This breakdown ensures basics are covered with clear steps, while the chaos and gamification keep it engaging and real-world-focused.
+
+
+---
+
+*Prepared by {Partha Sarathi Kundu} on April 19, 2025, for the AWS DevOps Bootcamp project.*

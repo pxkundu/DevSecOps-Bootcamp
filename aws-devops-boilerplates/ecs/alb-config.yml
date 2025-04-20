@@ -1,0 +1,28 @@
+Resources:
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets:
+        - '{{SUBNET_ID_1}}'  # Replace with your public subnet ID
+        - '{{SUBNET_ID_2}}'  # Replace with another public subnet ID
+      SecurityGroups:
+        - '{{SECURITY_GROUP_ID}}'  # Replace with your security group ID
+      Scheme: internet-facing
+      Type: application
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: '{{VPC_ID}}'  # Replace with your VPC ID
+      Port: 5000
+      Protocol: HTTP
+      HealthCheckPath: /health
+      TargetType: ip
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup

@@ -1,0 +1,76 @@
+Resources:
+  BackupFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: DynamoDBBackup
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          from datetime import datetime
+
+          def get_input(prompt):
+              try:
+                  return os.environ.get(prompt) or input(f"Enter {prompt}: ")
+              except EOFError:
+                  raise ValueError(f"{prompt} not provided")
+
+          def lambda_handler(event, context):
+              table_name = get_input('TABLE_NAME')
+              sns_topic_arn = get_input('SNS_TOPIC_ARN')
+              dynamodb = boto3.client('dynamodb')
+              sns = boto3.client('sns')
+              backup_name = f"{table_name}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+              dynamodb.create_backup(TableName=table_name, BackupName=backup_name)
+              sns.publish(
+                  TopicArn=sns_topic_arn,
+                  Message=f"Backup {backup_name} created for table {table_name}"
+              )
+              return {'statusCode': 200, 'body': json.dumps('Backup complete')}
+      Runtime: python3.9
+      Timeout: 60
+      Environment:
+        Variables:
+          TABLE_NAME: '{{TABLE_NAME}}'  # Replace with your DynamoDB table name
+          SNS_TOPIC_ARN: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoDBBackupPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:CreateBackup
+                  - dynamodb:DescribeTable
+                Resource: '*'
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Weekly DynamoDB backup
+      ScheduleExpression: rate(7 days)
+      Targets:
+        - Arn: !GetAtt BackupFunction.Arn
+          Id: BackupFunctionTarget
+  PermissionForEvents:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref BackupFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleRule.Arn

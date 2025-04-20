@@ -1,0 +1,17 @@
+Resources:
+  LatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm if API Gateway latency exceeds 500ms"
+      Namespace: AWS/ApiGateway
+      MetricName: Latency
+      Dimensions:
+        - Name: ApiName
+          Value: '{{API_ID}}'  # Replace with your API Gateway ID or name
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 2
+      Threshold: 0.5
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - '{{SNS_TOPIC_ARN}}'  # Replace with your SNS Topic ARN
