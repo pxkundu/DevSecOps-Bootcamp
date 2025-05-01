@@ -1,176 +1,86 @@
 #!/bin/bash
 
-# Fail-proof script to set up Kubernetes master node on Amazon Linux 2023 with Calico CNI
-# Run as ec2-user with sudo privileges
-# Logs to /var/log/k8s-master-setup.log
+# Kubernetes Setup Script for Amazon Linux 2023
+# Run this script with sudo privileges on both master and worker nodes
 
 # Exit on any error
 set -e
 
-# Variables
-LOG_FILE="/var/log/k8s-master-setup.log"
-K8S_VERSION="1.29.7"
 CALICO_VERSION="v3.28.2"
-POD_CIDR="192.168.0.0/16"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m' # No Color
+# Log file for debugging
+LOG_FILE="/var/log/k8s_setup.log"
+echo "Starting Kubernetes setup at $(date)" | tee -a $LOG_FILE
 
-# Function to log messages
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+# Function to check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
 }
 
-# Function to check command success
-check_status() {
-    if [ $? -eq 0 ]; then
-        log "${GREEN}SUCCESS: $1${NC}"
-    else
-        log "${RED}ERROR: $1 failed${NC}"
-        exit 1
-    fi
-}
+# Function to identify if this is master or worker node
+NODE_TYPE=${1:-"master"}  # Default to master if no argument provided
 
-# Function to get private IP using IMDSv2
-get_private_ip() {
-    log "Fetching private IP from EC2 metadata..."
-    TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
-    if [ -n "$TOKEN" ]; then
-        MASTER_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/local-ipv4 || echo "")
-        if [ -z "$MASTER_IP" ]; then
-            log "${RED}ERROR: Failed to fetch private IP${NC}"
-            exit 1
-        fi
-        log "Private IP: $MASTER_IP"
-    else
-        log "${RED}ERROR: Failed to obtain IMDSv2 token${NC}"
-        exit 1
-    fi
-}
+# Update system and install basic utilities
+echo "Updating system..." | tee -a $LOG_FILE
+yum update -y
 
-# Function to validate prerequisites
-validate_prereqs() {
-    log "Validating prerequisites..."
-    # Check if running as ec2-user
-    if [ "$(whoami)" != "ec2-user" ]; then
-        log "${RED}ERROR: Must run as ec2-user${NC}"
-        exit 1
-    fi
-    # Check internet connectivity
-    ping -c 1 google.com >/dev/null 2>&1
-    check_status "Internet connectivity check"
-    # Prompt for SSH key
-    read -p "Enter path to SSH key (or press Enter to skip): " SSH_KEY
-    if [ -n "$SSH_KEY" ] && [ ! -f "$SSH_KEY" ]; then
-        log "${RED}ERROR: SSH key $SSH_KEY not found${NC}"
-        exit 1
-    fi
-    # Check instance type (t3.medium recommended)
-    TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
-    if [ -n "$TOKEN" ]; then
-        instance_type=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-type || echo "unknown")
-    else
-        instance_type="unknown"
-    fi
-    if [[ "$instance_type" != "t3.medium" ]]; then
-        log "WARNING: Instance type is $instance_type, t3.medium recommended"
-    else
-        log "Instance type is $instance_type"
-    fi
-}
+# Install containerd as container runtime
+echo "Installing containerd..." | tee -a $LOG_FILE
+yum install -y containerd
+systemctl enable containerd
+systemctl start containerd
 
-# Function to install dependencies
-install_deps() {
-    log "Installing dependencies..."
-    sudo yum update -y
-    sudo yum install -y containerd conntrack-tools socat
-    check_status "Dependency installation"
+# Configure containerd
+mkdir -p /etc/containerd
+containerd config default > /etc/containerd/config.toml
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+systemctl restart containerd
 
-    # Configure containerd
-    sudo mkdir -p /etc/containerd
-    containerd config default | sudo tee /etc/containerd/config.toml
-    sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
-    sudo systemctl enable --now containerd
-    check_status "containerd configuration"
-}
+# Disable SELinux (simplified for learning)
+setenforce 0
+sed -i 's/^SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
 
-# Function to install Kubernetes components
-install_k8s() {
-    log "Installing Kubernetes $K8S_VERSION..."
-    cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+# Disable swap (Kubernetes requirement)
+swapoff -a
+sed -i '/swap/d' /etc/fstab
+
+# Load required kernel modules
+echo "Loading kernel modules..." | tee -a $LOG_FILE
+modprobe br_netfilter
+echo 'br_netfilter' > /etc/modules-load.d/br_netfilter.conf
+
+# Enable IP forwarding
+echo "Enabling IP forwarding..." | tee -a $LOG_FILE
+sysctl -w net.ipv4.ip_forward=1
+echo 'net.ipv4.ip_forward = 1' > /etc/sysctl.d/99-kubernetes.conf
+sysctl --system
+
+# Install Kubernetes components
+echo "Installing Kubernetes components..." | tee -a $LOG_FILE
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+baseurl= https://pkgs.k8s.io/core:/stable:/v1.28/rpm/ 
 enabled=1
 gpgcheck=1
-gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+gpgkey= https://pkgs.k8s.io/core:/stable:/v1.28/rpm/repodata/repomd.xml . key 
 EOF
-    sudo yum install -y kubelet-$K8S_VERSION kubeadm-$K8S_VERSION kubectl-$K8S_VERSION --disableexcludes=kubernetes
-    check_status "Kubernetes installation"
-    sudo systemctl enable --now kubelet
-    check_status "kubelet enable"
-}
 
-# Function to configure system settings
-configure_system() {
-    log "Configuring system settings..."
-    # Disable swap
-    sudo swapoff -a
-    sudo sed -i '/ swap / s/^/#/' /etc/fstab
-    check_status "Swap disabled"
+yum install -y kubelet kubeadm kubectl
+systemctl enable kubelet
 
-    # Enable kernel modules
-    cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
-overlay
-br_netfilter
-EOF
-    sudo modprobe overlay
-    sudo modprobe br_netfilter
-    check_status "Kernel modules enabled"
-
-    # Set sysctl params
-    cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-iptables  = 1
-net.bridge.bridge-nf-call-ip6tables = 1
-net.ipv4.ip_forward                 = 1
-EOF
-    sudo sysctl --system
-    check_status "Sysctl configuration"
-}
-
-# Function to initialize Kubernetes control plane
-init_k8s() {
-    log "Initializing Kubernetes control plane..."
-    sudo kubeadm init \
-        --pod-network-cidr="$POD_CIDR" \
-        --apiserver-advertise-address="$MASTER_IP" \
-        --kubernetes-version="$K8S_VERSION" \
-        --ignore-preflight-errors=NumCPU \
-        | tee /tmp/kubeadm-init.log
-    check_status "Kubernetes initialization"
-
-    # Set up kubeconfig for ec2-user
-    mkdir -p "$HOME/.kube"
-    sudo cp -f /etc/kubernetes/admin.conf "$HOME/.kube/config"
-    sudo chown $(id -u):$(id -g) "$HOME/.kube/config"
-    check_status "ec2-user kubeconfig setup"
-
-    # Set up kubeconfig for root
-    sudo mkdir -p /root/.kube
-    sudo cp -f /etc/kubernetes/admin.conf /root/.kube/config
-    sudo chown root:root /root/.kube/config
-    check_status "root kubeconfig setup"
-
-    # Save join command
-    grep 'kubeadm join' /tmp/kubeadm-init.log > /home/ec2-user/kubeadm-join.sh
-    chmod +x /home/ec2-user/kubeadm-join.sh
-    check_status "Join command saved"
-}
-
-# Function to install Calico CNI
-install_calico() {
+# Master node specific configuration
+if [ "$NODE_TYPE" = "master" ]; then
+    echo "Configuring master node..." | tee -a $LOG_FILE
+    
+    # Initialize the Kubernetes cluster with ignore flags for warnings
+    kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=FileExisting-tc,Hostname | tee -a $LOG_FILE
+    
+    # Set up kubeconfig for root user
+    mkdir -p /root/.kube
+    cp -i /etc/kubernetes/admin.conf /root/.kube/config
+    chown root:root /root/.kube/config
+    
     log "Installing Calico $CALICO_VERSION..."
     kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/$CALICO_VERSION/manifests/calico.yaml
     check_status "Calico installation"
@@ -183,29 +93,30 @@ install_calico() {
     # Verify Calico
     kubectl get pods -n kube-system -l k8s-app=calico-node
     check_status "Calico status check"
-}
+    
+    # Save join command for workers
+    kubeadm token create --print-join-command > /root/kubeadm_join_cmd.sh
+    chmod +x /root/kubeadm_join_cmd.sh
+    
+    echo "Master node setup complete. Save the join command from /root/kubeadm_join_cmd.sh" | tee -a $LOG_FILE
+fi
 
-# Function to validate setup
-validate_setup() {
-    log "Validating Kubernetes setup..."
-    kubectl get nodes | grep -q Ready
-    check_status "Node readiness check"
-    kubectl get pods -n kube-system -l k8s-app=calico-node | grep -q Running
-    check_status "Calico pod check"
-}
+# Worker node specific configuration
+if [ "$NODE_TYPE" = "worker" ]; then
+    echo "Configuring worker node..." | tee -a $LOG_FILE
+    echo "Please run the join command from the master node's /root/kubeadm_join_cmd.sh" | tee -a $LOG_FILE
+fi
 
-# Main execution
-log "Starting Kubernetes master node setup with Calico CNI..."
+# Start kubelet
+systemctl start kubelet
 
-get_private_ip
-validate_prereqs
-install_deps
-install_k8s
-configure_system
-init_k8s
-install_calico
-validate_setup
+echo "Kubernetes setup completed successfully at $(date)" | tee -a $LOG_FILE
+echo "Node type: $NODE_TYPE"
+echo "Next steps:"
+if [ "$NODE_TYPE" = "master" ]; then
+    echo "1. You can verify cluster: kubectl get nodes"
+    echo "2. Share the join command with worker nodes"
+else
+    echo "1. get and run the join command from master node"
+fi
 
-log "${GREEN}Kubernetes master node setup completed successfully!${NC}"
-log "Join worker nodes using: /home/ec2-user/kubeadm-join.sh"
-log "Logs saved to: $LOG_FILE"
