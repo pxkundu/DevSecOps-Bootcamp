@@ -1,0 +1,28 @@
+name: Trivy Security Scan
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install Trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+    - name: File system scan (Secrets, Vuln)
+      run: trivy fs --exit-code 1 --severity HIGH,CRITICAL .
+
+    - name: Config scan (IaC + Dockerfile)
+      run: trivy config --exit-code 1 --severity HIGH,CRITICAL .
+
+    - name: Upload results (SARIF)
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: trivy-results.sarif
