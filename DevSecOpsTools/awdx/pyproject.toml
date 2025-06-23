@@ -1,0 +1,24 @@
+[project]
+name = "awdx"
+version = "0.0.1"
+description = "AWS DevOps X: Human-friendly, interactive AWS DevSecOps CLI tool."
+authors = [
+  { name = "Partha Sarathi Kundu", email = "pxkundu2@shockers.wichita.edu" }
+]
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+dependencies = [
+    "typer[all] >=0.9.0",
+    "boto3 >=1.28.0"
+]
+
+[project.scripts]
+awdx = "awdx.__main__:app"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"] 
