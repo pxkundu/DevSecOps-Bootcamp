@@ -31,18 +31,18 @@ Profilyze aims to be the smartest, most intuitive, and lightweight AWS profile m
 
 ## CLI Structure (Commands & Subcommands)
 ```
-profilyze list                # List all profiles
-profilyze use <profile>       # Switch to a profile
-profilyze add                 # Add a new profile (interactive)
-profilyze edit <profile>      # Edit an existing profile
-profilyze delete <profile>    # Delete a profile
-profilyze validate <profile>  # Validate credentials and permissions
-profilyze info <profile>      # Show profile details and security posture
-profilyze suggest <profile>   # Suggest best practices for a profile
-profilyze import <file>       # Import profiles from file
-profilyze export <file>       # Export profiles to file
-profilyze current             # Show current profile and region
-profilyze help                # Show help
+awdx profile list                # List all profiles
+awdx profile current             # Show current AWS profile and region
+awdx profile switch <PROFILE>    # Switch to a profile
+awdx profile add                 # Add a new profile (interactive)
+awdx profile edit <PROFILE>      # Edit an existing profile
+awdx profile delete <PROFILE>    # Delete a profile
+awdx profile validate <PROFILE>  # Validate credentials and permissions
+awdx profile info <PROFILE>      # Show profile details and security posture
+awdx profile suggest <PROFILE>   # Suggest best practices for a profile
+awdx profile import <FILE>       # Import profiles from file
+awdx profile export <FILE>       # Export profiles to file
+awdx profile help                # Show help for profile commands
 ```
 
 ---

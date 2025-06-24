@@ -1,6 +1,6 @@
 [project]
 name = "awdx"
-version = "0.0.1"
+version = "0.0.3"
 description = "AWS DevOps X: Human-friendly, interactive AWS DevSecOps CLI tool."
 authors = [
   { name = "Partha Sarathi Kundu", email = "pxkundu2@shockers.wichita.edu" }
