@@ -1,297 +1,439 @@
-# DevSecOps-Bootcamp
-6-week DevSecOps bootcamp with step-by-step instructions for participants to follow. Used out-of-the-box approach intact, blending foundational learning with chaos, gamification, and real-world simulation.
+# DevSecOps-Bootcamp 🚀
 
-Below is a detailed breakdown of each day’s activities for the 6-week bootcamp, with step-by-step instructions for participants to follow. 
+A comprehensive 6-week DevSecOps bootcamp with step-by-step instructions, hands-on projects, and real-world simulations. This bootcamp blends foundational learning with chaos engineering, gamification, and practical implementation to prepare intermediate AWS DevOps and Cloud Engineers for real-world challenges.
 
-I’ve kept the out-of-the-box approach intact, blending foundational learning with chaos, gamification, and real-world simulation. Each day is structured for 4-6 hours, with clear tasks, tools, and processes to guide intermediate AWS DevOps and Cloud Engineers.
+## 📚 Complete Learning Path Index
 
----
-### Content Index
-
-## Table of Contents
-
-### Week1
-
-- [Week1 Overview](Week1/README.md) - General introduction to Week 1
-- [Week1 Day1 Overview](Week1/Day1.md) - Day 1 activities and notes
-- [Week1 Day2 Overview](Week1/Day2.md) - Day 2 activities and notes
-- [Week1 Day3 Overview](Week1/Day3.md) - Day 3 activities and notes
-- [Week1 Day4 Overview](Week1/Day4.md) - Day 4 activities and notes
-- [Week1 Day5 Overview](Week1/Day5/README.md) - Day 5 summary and project overview
-  - [Day5 Project Details](Week1/Day5/Day5.md) - Detailed Day 5 project documentation
-
-### Week2
-
-- [Week2 Overview](Week2/README.md) - General introduction to Week 2
-- [Week2 Day1 Overview](Week2/Day1.md) - Day 1 activities and notes
-- [Week2 Day2 Overview](Week2/Day2.md) - Day 2 activities and notes
-- [Week2 Day3 Overview](Week2/Day3.md) - Day 3 activities and notes
-- [Week2 Day4 Overview](Week2/Day4/Day4.md) - Day 4 summary and project overview
-- [Week2 Day5 Overview](Week2/Day5/README.md) - Day 5 summary and project overview
-  - [Day5 Project Details](Week2/Day5/Day5.md) - Detailed Day 5 project documentation
-
-### Week3
-
-- [Week3 Overview](Week3/README.md) - General introduction to Week 3
-- [Week3 Day1 Overview](Week3/Day1.md) - Day 1 activities and notes
-- [Week3 Day2 Overview](Week3/Day2.md) - Day 2 activities and notes
-- [Week3 Day3 Overview](Week3/Day3/README.md) - Day 3 summary and project overview
-  - [Pipeline Library Documentation](Week3/Day3/week3-day3/pipeline-lib/README.md) - Pipeline library details
-  - [Task Manager Documentation](Week3/Day3/week3-day3/task-manager/README.md) - Task manager project details
-- [Week3 Day4 Overview](Week3/Day4/README.md) - Day 4 summary and project overview
-  - [Pipeline Library Documentation](Week3/Day4/week3-day4/pipeline-lib/README.md) - Pipeline library details
-  - [Task Manager GitOps Documentation](Week3/Day4/week3-day4/task-manager-gitops/README.md) - GitOps implementation details
-- [Week3 Day5 Overview](Week3/Day5/Day5.md) - Day 5 summary and project overview
-  - [Jenkins Master-Slave Automation Documentation](Week3/Day5/JenkinsMasterSlaveAutomation/README.md) - Jenkins automation project details
-
-### Week4
-
-- [Week4 Overview](Week4/README.md) - General introduction to Week 4
-- [Week4 Day1 Overview](Week4/Day1/README.md) - Day 1 summary and project overview
-  - [Static Website Terraform Jenkins Documentation](Week4/Day1/StaticWebsiteTerraformJenkins/README.md) - Static website project with Terraform and Jenkins
-- [Week4 Day2 Overview](Week4/Day2/README.md) - Day 2 summary and project overview
-  - [Advance Topics Project Overview](Week4/Day2/ProjectWithAdvanceTopics/README.md) - Overview of advanced topics project
-  - [CRM Terraform Jenkins Documentation](Week4/Day2/ProjectWithAdvanceTopics/CRMTerraformJenkins/README.md) - CRM project with Terraform and Jenkins
-- [Week4 Day3 Overview](Week4/Day3/README.md) - Day 3 summary and project overview
-  - [Message Encoder Decoder K8s Documentation](Week4/Day3/MessageEncoderDecoderK8s/README.md) - Kubernetes-based message encoder/decoder project
-- [Week4 Day4 Overview](Week4/Day4/README.md) - Day 4 activities and notes
-- [Week4 Day5 Overview](Week4/Day5/README.md) - Day 5 summary and capstone project overview
-  - [CRM Supply Chain Capstone Documentation](Week4/Day5/CRMSupplyChainCapstone/README.md) - Main capstone project documentation
-  - [Capstone Docs Overview](Week4/Day5/CRMSupplyChainCapstone/docs/README.md) - Additional documentation for capstone
-  - [Project Implementation Plan Overview](Week4/Day5/ProjectImplementationPlan/README.md) - Implementation plan overview
-  - [Phase1 Documentation](Week4/Day5/ProjectImplementationPlan/Phase1/README.md) - Phase 1 details
-  - [Phase2 Documentation](Week4/Day5/ProjectImplementationPlan/Phase2/README.md) - Phase 2 details
-  - [Phase3 Documentation](Week4/Day5/ProjectImplementationPlan/Phase3/README.md) - Phase 3 details
-  - [Phase4 Documentation](Week4/Day5/ProjectImplementationPlan/Phase4/README.md) - Phase 4 details
-  - [Phase5 Documentation](Week4/Day5/ProjectImplementationPlan/Phase5/README.md) - Phase 5 details
-
-### Week5
-
-- [Week5 Overview](Week5/README.md) - General introduction to Week 5
-- [Week5 Day1 Overview](Week5/Day1/README.md) - Day 1 activities and security focus
---- 
-
-### Week 1: Core AWS Foundations with a Twist
-**Goal**: Build AWS basics with light chaos to spark engagement.
+### 🗓️ **Week 1: Core AWS Foundations with Chaos Engineering**
+**Goal**: Build AWS basics with controlled chaos to spark engagement and resilience.
 
 #### Day 1: AWS Basics Refresher
 - **Duration**: 4-5 hours
-- **Objective**: Set up foundational AWS resources and recover from a simulated failure.
+- **Objective**: Set up foundational AWS resources and recover from simulated failures
 - **Tools**: AWS Console, AWS CLI
-
-**Activities**:
-1. **Theory (1 hour)** - AWS Basics Overview
-   - Watch a 30-minute video or live session on EC2, S3, IAM, and VPC basics.
-   - Review key concepts: instance types, bucket policies, roles, subnets.
-   - Take a 5-question quiz (e.g., “What’s an IAM role?”) to self-assess.
-
-2. **Lab: Launch an EC2 Instance in a Custom VPC (2 hours)**
-   - **Step 1**: Log into AWS Console and select a region (e.g., us-east-1).
-   - **Step 2**: Create a VPC (CIDR: 10.0.0.0/16), add one public subnet (10.0.1.0/24).
-     - Go to VPC Dashboard > Create VPC > Name it “BootcampVPC”.
-     - Add subnet under Subnets > Associate with default route table.
-   - **Step 3**: Set up an Internet Gateway and attach it to the VPC.
-     - VPC > Internet Gateways > Create > Attach to “BootcampVPC”.
-   - **Step 4**: Launch an EC2 instance (t2.micro, Amazon Linux 2).
-     - EC2 Dashboard > Launch Instance > Assign to “BootcampVPC” subnet.
-     - Create a Security Group allowing SSH (port 22) from your IP.
-   - **Step 5**: SSH into the instance (`ssh -i <key.pem> ec2-user@<public-ip>`).
-     - Install a simple web server: `sudo yum install httpd -y; sudo systemctl start httpd`.
-   - **Step 6**: Verify the web server works via browser (`http://<public-ip>`).
-
-3. **Chaos Twist: "Power Outage" (1 hour)**
-   - **Trigger**: Instructor terminates the subnet mid-lab (simulated via deletion or route table change).
-   - **Step 1**: Notice the instance is unreachable (SSH fails, web server down).
-   - **Step 2**: Check VPC resources in AWS Console; identify missing subnet.
-   - **Step 3**: Recreate the subnet (10.0.1.0/24) and reassign the instance.
-     - VPC > Subnets > Create > Assign to “BootcampVPC”.
-     - EC2 > Actions > Networking > Change Subnet.
-   - **Step 4**: Update route table to point to Internet Gateway.
-   - **Step 5**: Test SSH and web server again; document what broke and how you fixed it.
-
-4. **Wrap-Up (30 min)**: Share recovery steps in a quick “war room” discussion.
-
----
+- **Activities**: VPC creation, EC2 deployment, web server setup, chaos recovery
+- **Chaos Twist**: "Power Outage" - subnet termination and recovery
+- **Resources**: [Day 1 Guide](Week1/Day1.md)
 
 #### Day 2: Storage and Databases
 - **Duration**: 4-5 hours
-- **Objective**: Deploy S3 and RDS with a competitive twist.
+- **Objective**: Deploy S3 and RDS with competitive gamification
 - **Tools**: AWS Console, MySQL Workbench
-
-**Activities**:
-1. **Theory (1 hour)** - Storage and DB Basics
-   - Learn S3 (buckets, policies, versioning) and RDS (instances, endpoints) via slides/video.
-   - Key takeaway: Public vs. private access, DB connectivity.
-
-2. **Lab: Deploy a Static Site + RDS (2.5 hours)**
-   - **Step 1**: Create an S3 bucket (`bootcamp-<yourname>-site`).
-     - S3 > Create Bucket > Enable static website hosting.
-     - Upload a simple `index.html` (e.g., “Hello, Bootcamp!”).
-     - Set bucket policy for public read:
-       ```json
-       {
-         "Statement": [
-           {
-             "Effect": "Allow",
-             "Principal": "*",
-             "Action": "s3:GetObject",
-             "Resource": "arn:aws:s3:::bootcamp-<yourname>-site/*"
-           }
-         ]
-       }
-       ```
-   - **Step 2**: Launch an RDS instance (MySQL, db.t2.micro).
-     - RDS > Create Database > Free Tier > Set password, assign to “BootcampVPC”.
-     - Security Group: Allow MySQL (port 3306) from your IP.
-   - **Step 3**: Connect via MySQL Workbench (`<endpoint>:3306`, username: admin).
-     - Create a table: `CREATE TABLE users (id INT, name VARCHAR(50));`.
-     - Insert data: `INSERT INTO users VALUES (1, 'Alice');`.
-   - **Step 4**: Test S3 site in browser (`http://<bucket-url>`).
-
-3. **Gamified Twist: Speed Race (1 hour)**
-   - Instructor starts a timer; fastest team to deploy site + DB wins “Storage Master” title.
-   - Bonus: Add a second HTML file to S3 and query RDS (`SELECT * FROM users;`).
-
-4. **Wrap-Up (30 min)**: Share URLs and DB outputs with peers.
-
----
+- **Activities**: S3 static site, RDS MySQL, database operations
+- **Gamified Twist**: Speed race for fastest deployment
+- **Resources**: [Day 2 Guide](Week1/Day2.md)
 
 #### Day 3: Networking Deep Dive
 - **Duration**: 4-5 hours
-- **Objective**: Build a multi-tier VPC and handle a simulated attack.
+- **Objective**: Build multi-tier VPC and handle simulated attacks
 - **Tools**: AWS Console
-
-**Activities**:
-1. **Theory (1 hour)** - Networking Essentials
-   - Study VPC subnets, NAT Gateways, and Security Groups (video or live).
-   - Focus: Public vs. private subnets, routing.
-
-2. **Lab: Build a Multi-Tier VPC (2 hours)**
-   - **Step 1**: Create a VPC (10.0.0.0/16).
-   - **Step 2**: Add subnets:
-     - Public (10.0.1.0/24) + Private (10.0.2.0/24).
-   - **Step 3**: Attach an Internet Gateway to the VPC.
-   - **Step 4**: Create a NAT Gateway in the public subnet.
-     - Allocate an Elastic IP > NAT Gateway > Assign to public subnet.
-   - **Step 5**: Update route tables:
-     - Public: 0.0.0.0/0 → Internet Gateway.
-     - Private: 0.0.0.0/0 → NAT Gateway.
-   - **Step 6**: Launch an EC2 in the private subnet; verify no public access.
-
-3. **Chaos Twist: "DDoS" Blocks Subnet (1.5 hours)**
-   - **Trigger**: Instructor modifies Security Group to block SSH (port 22).
-   - **Step 1**: Notice SSH failure to private EC2.
-   - **Step 2**: Check Security Groups and route tables in AWS Console.
-   - **Step 3**: Add a new rule to allow SSH from your IP.
-   - **Step 4**: Test connectivity and secure the setup (e.g., limit IP range).
-
-4. **Wrap-Up (30 min)**: Discuss attack mitigation strategies.
-
----
+- **Activities**: Multi-tier VPC, NAT Gateways, route tables
+- **Chaos Twist**: "DDoS" - security group modifications
+- **Resources**: [Day 3 Guide](Week1/Day3.md)
 
 #### Day 4: Intro to Scripting
 - **Duration**: 4-5 hours
-- **Objective**: Automate EC2 setup with a scripted failure.
+- **Objective**: Automate EC2 setup with scripted failures
 - **Tools**: AWS CLI, Bash
-
-**Activities**:
-1. **Theory (1 hour)** - Scripting Basics
-   - Learn AWS CLI commands and Bash essentials (video or live).
-   - Example: `aws ec2 describe-instances`.
-
-2. **Lab: Automate EC2 Provisioning (2 hours)**
-   - **Step 1**: Install AWS CLI locally (`aws configure` with access keys).
-   - **Step 2**: Write a Bash script (`launch-ec2.sh`):
-     ```bash
-     #!/bin/bash
-     aws ec2 run-instances --image-id ami-0c55b159cbfafe1f0 --instance-type t2.micro --subnet-id <subnet-id> --security-group-ids <sg-id> --key-name <keypair>
-     ```
-   - **Step 3**: Make it executable (`chmod +x launch-ec2.sh`) and run it.
-   - **Step 4**: SSH into the instance and install httpd as on Day 1.
-
-3. **Chaos Twist: Script Fails (1.5 hours)**
-   - **Trigger**: Instructor swaps AMI ID to an invalid one mid-lab.
-   - **Step 1**: Run script; note the error (`InvalidAMIID`).
-   - **Step 2**: Debug: Check AMI availability (`aws ec2 describe-images --filters "Name=name,Values=amzn2*"`).
-   - **Step 3**: Update script with a valid AMI (e.g., `ami-0c55b159cbfafe1f0`).
-   - **Step 4**: Rerun and verify the web server works.
-
-4. **Wrap-Up (30 min)**: Share scripts and fixes.
-
----
+- **Activities**: AWS CLI automation, EC2 provisioning scripts
+- **Chaos Twist**: Script failures and debugging
+- **Resources**: [Day 4 Guide](Week1/Day4.md)
 
 #### Day 5: Mini-Project
 - **Duration**: 5-6 hours
-- **Objective**: Deploy a web app with a last-minute twist.
+- **Objective**: Deploy web app with last-minute requirements
 - **Tools**: AWS Console, AWS CLI
+- **Activities**: Web application deployment, S3 integration
+- **Chaos Twist**: "CEO Tweet" - emergency status page
+- **Resources**: [Day 5 Guide](Week1/Day5/README.md)
+  - [Project Details](Week1/Day5/Day5.md)
+  - [Best Practices](Week1/Day5/BestPractices.md)
+  - [NodeJS Project](Week1/Day5/NodeJSprojectWithInEC2server.md)
+  - [PHP Project](Week1/Day5/PHPprojectWithInEC2server.md)
+  - [WordPress CMS Project](Week1/Day5/WPCMSprojectWithInEC2server.md)
 
-**Activities**:
-1. **Project Setup (2 hours)**:
-   - **Step 1**: Reuse “BootcampVPC” with public subnet.
-   - **Step 2**: Launch an EC2 with httpd installed (manual or scripted).
-   - **Step 3**: Create an S3 bucket for static assets (e.g., CSS file).
-   - **Step 4**: Link S3 asset in EC2’s `index.html` (e.g., `<link href="http://<bucket-url>/style.css">`).
-
-2. **Chaos Twist: "CEO Tweet" (2 hours)**:
-   - **Trigger**: Instructor demands a status page 30 minutes before demo.
-   - **Step 1**: Create `status.html` (“System: Online”) and upload to S3.
-   - **Step 2**: Update EC2’s `index.html` with a link to the status page.
-   - **Step 3**: Test both pages in browser.
-
-3. **Demo and Wrap-Up (1-2 hours)**:
-   - Present app to peers (URL + architecture sketch).
-   - Discuss chaos response in a war room session.
+**Week 1 Resources**: [Overview](Week1/README.md) | [Topics](Week1/Topics/)
 
 ---
 
-### Weeks 2-6: Summary with Similar Detail Available
-To avoid overwhelming this response, here’s a high-level breakdown for the remaining weeks. I can expand any day with step-by-step instructions if you’d like!
+### 🗓️ **Week 2: Infrastructure as Code and Containers**
+**Goal**: Master IaC tools and containerization with competitive challenges.
 
-#### Week 2: Infrastructure as Code and Containers
-- **Day 1**: CloudFormation Basics - Write a template, deploy EC2 + RDS, fix a random error.
-- **Day 2**: Terraform Intro - Rebuild Day 1 stack, race against peers.
-- **Day 3**: Docker Fundamentals - Build/run a container, solve an escape room challenge.
-- **Day 4**: Containers on ECS - Deploy to Fargate, scale after a traffic spike.
-- **Day 5**: Mini-Hackathon - IaC + ECS app, recover from Chaos Monkey.
+#### Day 1: CloudFormation Basics
+- **Duration**: 4-5 hours
+- **Objective**: Write templates, deploy EC2 + RDS, fix random errors
+- **Tools**: AWS CloudFormation, AWS Console
+- **Activities**: Template creation, stack deployment, error resolution
+- **Chaos Twist**: Random template errors and fixes
+- **Resources**: [Day 1 Guide](Week2/Day1.md)
 
-#### Week 3: CI/CD and Serverless with Incident Drills
-- **Day 1**: CI/CD Basics - GitHub Actions pipeline, rollback a bad commit.
-- **Day 2**: AWS CodeSuite - CodePipeline for ECS, fix a prod outage.
-- **Day 3**: Serverless Foundations - Lambda API, secure from a rival “hack.”
-- **Day 4**: Pipeline Under Pressure - Multi-stage deploy, add a feature mid-build.
-- **Day 5**: Incident Showdown - Fix a cascading failure, write a post-mortem.
+#### Day 2: Terraform Introduction
+- **Duration**: 4-5 hours
+- **Objective**: Rebuild Day 1 stack, race against peers
+- **Tools**: Terraform, AWS CLI
+- **Activities**: Terraform configuration, state management
+- **Gamified Twist**: Speed competition for fastest deployment
+- **Resources**: [Day 2 Guide](Week2/Day2.md)
 
-#### Week 4: Scalability and Monitoring with Chaos
-- **Day 1**: Load Balancing - ALB setup, tune for a surge.
-- **Day 2**: Autoscaling - Add autoscaling, recover a terminated instance.
-- **Day 3**: CloudWatch - Monitor ECS, solve a performance mystery.
-- **Day 4**: EKS Intro - Deploy to EKS, heal a crashed pod.
-- **Day 5**: Resilience Rally - Scalable app, survive a chaos test.
+#### Day 3: Docker Fundamentals
+- **Duration**: 4-5 hours
+- **Objective**: Build/run containers, solve escape room challenges
+- **Tools**: Docker, Docker Compose
+- **Activities**: Container creation, image management, networking
+- **Chaos Twist**: Container escape room challenges
+- **Resources**: [Day 3 Guide](Week2/Day3.md)
 
-#### Week 5: Security, Cost, and Troubleshooting
-- **Day 1**: Security Basics - Encrypt S3/RDS, fix an exposed bucket.
-- **Day 2**: Disaster Recovery - Multi-AZ RDS, failover after outage.
-- **Day 3**: Cost Optimization - Cut costs, avoid “firing” for overspending.
-- **Day 4**: Troubleshooting - Debug with X-Ray, solve a gauntlet.
-- **Day 5**: Mini-Project - Secure app with DR, pass a peer audit.
+#### Day 4: Containers on ECS
+- **Duration**: 4-5 hours
+- **Objective**: Deploy to Fargate, scale after traffic spikes
+- **Tools**: AWS ECS, Fargate
+- **Activities**: ECS cluster setup, service deployment, auto-scaling
+- **Chaos Twist**: Traffic spike simulation
+- **Resources**: [Day 4 Guide](Week2/Day4/Day4.md)
+  - [EKS Implementation](Week2/Day4/Day4onEKS.md)
 
-#### Week 6: Capstone and Real-World Crunch
-- **Day 1**: Capstone Kickoff - Plan microservices, swap a tool mid-plan.
-- **Day 2**: Build and Automate - CI/CD + EKS, scale for a DDoS.
-- **Day 3**: Secure and Monitor - Add encryption/alarms, pass a pen test.
-- **Day 4**: Chaos Crunch - Survive outages/spikes, write a runbook.
-- **Day 5**: Prod Push - Demo to “execs,” score on resilience/creativity.
+#### Day 5: Mini-Hackathon
+- **Duration**: 5-6 hours
+- **Objective**: IaC + ECS app, recover from Chaos Monkey
+- **Tools**: Terraform, ECS, AWS CLI
+- **Activities**: Complete application deployment, chaos testing
+- **Chaos Twist**: Chaos Monkey attacks
+- **Resources**: [Day 5 Guide](Week2/Day5/README.md)
+  - [Project Details](Week2/Day5/Day5.md)
+  - [JPMC with Kubernetes](Week2/Day5/JPMCwithKube.md)
+  - [Top 5 Companies Using Kubernetes](Week2/Day5/Top5companiesUsinfKube.md)
+
+**Week 2 Resources**: [Overview](Week2/README.md) | [Topics](Week2/Topics/)
 
 ---
 
-### Notes
-- **Tools**: AWS CLI, Terraform, Docker, GitHub Actions, etc., installed locally or in a provided sandbox.
-- **Chaos Triggers**: Instructors use scripts or manual interventions (e.g., terminate resources, change configs).
-- **Support**: Daily war rooms + “mentor hotline” for stuck participants.
+### 🗓️ **Week 3: CI/CD and Serverless with Incident Drills**
+**Goal**: Master CI/CD pipelines and serverless with real incident scenarios.
 
-This breakdown ensures basics are covered with clear steps, while the chaos and gamification keep it engaging and real-world-focused.
+#### Day 1: CI/CD Basics
+- **Duration**: 4-5 hours
+- **Objective**: GitHub Actions pipeline, rollback bad commits
+- **Tools**: GitHub Actions, Git
+- **Activities**: Pipeline creation, automated testing, rollback procedures
+- **Chaos Twist**: Bad commit deployment and recovery
+- **Resources**: [Day 1 Guide](Week3/Day1.md)
 
+#### Day 2: AWS CodeSuite
+- **Duration**: 4-5 hours
+- **Objective**: CodePipeline for ECS, fix production outages
+- **Tools**: AWS CodePipeline, CodeBuild, CodeDeploy
+- **Activities**: Multi-stage pipeline, ECS deployment
+- **Chaos Twist**: Production outage simulation
+- **Resources**: [Day 2 Guide](Week3/Day2.md)
+
+#### Day 3: Serverless Foundations
+- **Duration**: 4-5 hours
+- **Objective**: Lambda API, secure from rival "hacks"
+- **Tools**: AWS Lambda, API Gateway
+- **Activities**: Serverless function creation, API development
+- **Chaos Twist**: Security breach simulation
+- **Resources**: [Day 3 Guide](Week3/Day3/README.md)
+  - [Pipeline Library](Week3/Day3/week3-day3/pipeline-lib/README.md)
+  - [Task Manager](Week3/Day3/week3-day3/task-manager/README.md)
+
+#### Day 4: Pipeline Under Pressure
+- **Duration**: 4-5 hours
+- **Objective**: Multi-stage deploy, add features mid-build
+- **Tools**: Jenkins, GitOps
+- **Activities**: Advanced pipeline configuration, GitOps implementation
+- **Chaos Twist**: Mid-build requirement changes
+- **Resources**: [Day 4 Guide](Week3/Day4/README.md)
+  - [Pipeline Library](Week3/Day4/week3-day4/pipeline-lib/README.md)
+  - [Task Manager GitOps](Week3/Day4/week3-day4/task-manager-gitops/README.md)
+
+#### Day 5: Incident Showdown
+- **Duration**: 5-6 hours
+- **Objective**: Fix cascading failures, write post-mortems
+- **Tools**: Jenkins, AWS CLI
+- **Activities**: Incident response, failure recovery, documentation
+- **Chaos Twist**: Cascading system failures
+- **Resources**: [Day 5 Guide](Week3/Day5/Day5.md)
+  - [Jenkins Master-Slave Automation](Week3/Day5/JenkinsMasterSlaveAutomation/README.md)
+
+**Week 3 Resources**: [Overview](Week3/README.md) | [Topics](Week3/Topics/)
 
 ---
 
-*Prepared by {Partha Sarathi Kundu} on April 19, 2025, for the AWS DevOps Bootcamp project.*
+### 🗓️ **Week 4: Scalability and Monitoring with Chaos**
+**Goal**: Build scalable systems with comprehensive monitoring and chaos testing.
+
+#### Day 1: Load Balancing
+- **Duration**: 4-5 hours
+- **Objective**: ALB setup, tune for traffic surges
+- **Tools**: AWS ALB, EC2, Terraform
+- **Activities**: Load balancer configuration, health checks, traffic distribution
+- **Chaos Twist**: Traffic surge simulation
+- **Resources**: [Day 1 Guide](Week4/Day1/README.md)
+  - [Static Website Terraform Jenkins](Week4/Day1/StaticWebsiteTerraformJenkins/README.md)
+
+#### Day 2: Autoscaling
+- **Duration**: 4-5 hours
+- **Objective**: Add autoscaling, recover terminated instances
+- **Tools**: AWS Auto Scaling, CloudWatch
+- **Activities**: Auto-scaling group configuration, policy management
+- **Chaos Twist**: Instance termination and recovery
+- **Resources**: [Day 2 Guide](Week4/Day2/README.md)
+  - [Advanced Topics Project](Week4/Day2/ProjectWithAdvanceTopics/README.md)
+  - [CRM Terraform Jenkins](Week4/Day2/ProjectWithAdvanceTopics/CRMTerraformJenkins/README.md)
+
+#### Day 3: CloudWatch Monitoring
+- **Duration**: 4-5 hours
+- **Objective**: Monitor ECS, solve performance mysteries
+- **Tools**: CloudWatch, X-Ray, ECS
+- **Activities**: Metric collection, alarm configuration, performance analysis
+- **Chaos Twist**: Performance mystery investigation
+- **Resources**: [Day 3 Guide](Week4/Day3/README.md)
+  - [Message Encoder Decoder K8s](Week4/Day3/MessageEncoderDecoderK8s/README.md)
+
+#### Day 4: EKS Introduction
+- **Duration**: 4-5 hours
+- **Objective**: Deploy to EKS, heal crashed pods
+- **Tools**: AWS EKS, kubectl
+- **Activities**: EKS cluster setup, pod deployment, troubleshooting
+- **Chaos Twist**: Pod crash simulation
+- **Resources**: [Day 4 Guide](Week4/Day4/README.md)
+
+#### Day 5: Resilience Rally
+- **Duration**: 5-6 hours
+- **Objective**: Scalable app, survive chaos tests
+- **Tools**: EKS, Terraform, Jenkins
+- **Activities**: Complete application deployment, chaos engineering
+- **Chaos Twist**: Multi-system failure simulation
+- **Resources**: [Day 5 Guide](Week4/Day5/README.md)
+  - [CRM Supply Chain Capstone](Week4/Day5/CRMSupplyChainCapstone/README.md)
+  - [Capstone Documentation](Week4/Day5/CRMSupplyChainCapstone/docs/README.md)
+  - [Project Implementation Plan](Week4/Day5/ProjectImplementationPlan/README.md)
+    - [Phase 1](Week4/Day5/ProjectImplementationPlan/Phase1/README.md)
+    - [Phase 2](Week4/Day5/ProjectImplementationPlan/Phase2/README.md)
+    - [Phase 3](Week4/Day5/ProjectImplementationPlan/Phase3/README.md)
+    - [Phase 4](Week4/Day5/ProjectImplementationPlan/Phase4/README.md)
+    - [Phase 5](Week4/Day5/ProjectImplementationPlan/Phase5/README.md)
+
+**Week 4 Resources**: [Overview](Week4/README.md) | [Topics](Week4/Topics/)
+
+---
+
+### 🗓️ **Week 5: Security, Cost, and Troubleshooting**
+**Goal**: Master security practices, cost optimization, and advanced troubleshooting.
+
+#### Day 1: Security Basics
+- **Duration**: 4-5 hours
+- **Objective**: Encrypt S3/RDS, fix exposed buckets
+- **Tools**: AWS KMS, IAM, Security Hub
+- **Activities**: Data encryption, access control, security assessment
+- **Chaos Twist**: Security breach simulation
+- **Resources**: [Day 1 Guide](Week5/Day1/README.md)
+
+#### Day 2: Disaster Recovery
+- **Duration**: 4-5 hours
+- **Objective**: Multi-AZ RDS, failover after outages
+- **Tools**: AWS RDS, Route 53, CloudFormation
+- **Activities**: DR strategy implementation, failover testing
+- **Chaos Twist**: Availability zone failure simulation
+- **Resources**: [Day 2 Guide](Week5/Day2/README.md)
+
+#### Day 3: Cost Optimization
+- **Duration**: 4-5 hours
+- **Objective**: Cut costs, avoid overspending penalties
+- **Tools**: AWS Cost Explorer, Trusted Advisor
+- **Activities**: Cost analysis, optimization strategies, budget management
+- **Chaos Twist**: Budget constraint challenges
+- **Resources**: [Day 3 Guide](Week5/Day3/README.md)
+
+#### Day 4: Advanced Troubleshooting
+- **Duration**: 4-5 hours
+- **Objective**: Debug with X-Ray, solve complex issues
+- **Tools**: AWS X-Ray, CloudWatch Logs, Systems Manager
+- **Activities**: Distributed tracing, log analysis, system diagnostics
+- **Chaos Twist**: Complex failure scenarios
+- **Resources**: [Day 4 Guide](Week5/Day4/README.md)
+
+#### Day 5: Security Mini-Project
+- **Duration**: 5-6 hours
+- **Objective**: Secure app with DR, pass peer audit
+- **Tools**: All Week 5 tools
+- **Activities**: Complete secure application, security audit
+- **Chaos Twist**: Peer security review
+- **Resources**: [Day 5 Guide](Week5/Day5/README.md)
+
+**Week 5 Resources**: [Overview](Week5/README.md)
+
+---
+
+### 🗓️ **Week 6: Capstone and Real-World Crunch**
+**Goal**: Synthesize all learning into a comprehensive capstone project.
+
+#### Day 1: Capstone Kickoff
+- **Duration**: 7-8 hours
+- **Objective**: Plan microservices, adapt to tool changes
+- **Tools**: Architecture planning, EKS, CI/CD tools
+- **Activities**: Microservices design, tool selection, adaptation
+- **Chaos Twist**: Mid-plan tool swapping
+- **Resources**: [Day 1 Guide](Week6/Day1/README.md)
+
+#### Day 2: Build and Automate
+- **Duration**: 7-8 hours
+- **Objective**: CI/CD + EKS, scale for DDoS attacks
+- **Tools**: EKS, GitHub Actions, AWS Shield
+- **Activities**: Platform deployment, automation, scaling
+- **Chaos Twist**: DDoS attack simulation
+- **Resources**: [Day 2 Guide](Week6/Day2/README.md)
+
+#### Day 3: Secure and Monitor
+- **Duration**: 7-8 hours
+- **Objective**: Add encryption/alarms, pass penetration tests
+- **Tools**: AWS KMS, CloudWatch, OWASP ZAP
+- **Activities**: Security implementation, monitoring setup, security testing
+- **Chaos Twist**: Penetration testing challenges
+- **Resources**: [Day 3 Guide](Week6/Day3/README.md)
+
+#### Day 4: Chaos Crunch
+- **Duration**: 7-8 hours
+- **Objective**: Survive outages/spikes, write runbooks
+- **Tools**: Chaos engineering tools, monitoring systems
+- **Activities**: Chaos testing, incident response, documentation
+- **Chaos Twist**: Multi-system failure simulation
+- **Resources**: [Day 4 Guide](Week6/Day4/README.md)
+
+#### Day 5: Production Push
+- **Duration**: 7-8 hours
+- **Objective**: Deploy to production, present to executives
+- **Tools**: All learned tools and techniques
+- **Activities**: Production deployment, presentation, evaluation
+- **Chaos Twist**: Executive review pressure
+- **Resources**: [Day 5 Guide](Week6/Day5/README.md)
+
+**Week 6 Resources**: [Overview](Week6/README.md) | [Plan](Week6/Plan.md) | [Kubernetes Plan](Week6/KubernetesPlan.md) | [Best Practices](Week6/BestPractices.md)
+- [Capstone Project](Week6/CapstoneProject/)
+- [Learning Kubernetes Project](Week6/LearningKubeProject/)
+
+---
+
+## 🛠️ **Additional Learning Resources**
+
+### 🔐 **DevSecOps Tools & Tutorials**
+- [DevSecOps Tools](DevSecOpsTools/) - Comprehensive tooling guide
+- [DevSecOps Trivy Tutorial](DevSecOpsTrivyTutorial/) - Complete Trivy security scanning guide
+  - [Part 1-10 Tutorial Series](DevSecOpsTrivyTutorial/learningTrivy_Part1.md)
+  - [Project Codebase](DevSecOpsTrivyTutorial/ProjectCodebase/)
+- [DevSecOps Automation](DevSecOpsAutomation/) - Kubernetes and Istio automation scripts
+  - [Kubernetes Setup Scripts](DevSecOpsAutomation/KubernetesMasterWorkerSetup/)
+  - [Istio Bookinfo Deployment](DevSecOpsAutomation/istio-bookinfo/)
+  - [Kubernetes Manifests](DevSecOpsAutomation/manifests/)
+
+### 🚀 **AWS DevOps Boilerplates**
+- [AWS DevOps Boilerplates](DevSecOpsBoilerplates/aws-devops-boilerplates/) - Production-ready templates
+  - CloudFormation, Terraform, Docker, ECS, Lambda, EKS
+  - IAM, CloudWatch, Secrets Management
+- [AWS Testing Boilerplates](DevSecOpsBoilerplates/aws-testing-boilerplates/) - Testing frameworks
+- [AWS Security Testing](DevSecOpsBoilerplates/aws-security-testing-boilerplates/) - Security testing templates
+- [AWS Cost Audit](DevSecOpsBoilerplates/aws-cost-audit-boilerplates/) - Cost optimization tools
+- [EKS Status Scanner](DevSecOpsBoilerplates/eks-status-scan-boilerplates/) - EKS monitoring tools
+
+### 🤖 **AI & Data Platform Solutions**
+- [Enterprise AI-Data Platform](AI-DataPlatformSolutions/) - Comprehensive AI/ML platform guide
+  - [Foundation & Architecture](AI-DataPlatformSolutions/01-Foundation/)
+  - [Data Engineering](AI-DataPlatformSolutions/02-DataEngineering/)
+  - [MLOps](AI-DataPlatformSolutions/03-MLOps/)
+  - [Infrastructure & DevOps](AI-DataPlatformSolutions/04-Infrastructure/)
+  - [Security & Compliance](AI-DataPlatformSolutions/05-Security/)
+  - [Tools & Technologies](AI-DataPlatformSolutions/06-Tools/)
+  - [Implementation Examples](AI-DataPlatformSolutions/07-Examples/)
+  - [Best Practices](AI-DataPlatformSolutions/08-BestPractices/)
+
+### 🧪 **Software Quality Assurance (SQA)**
+- [SQA Knowledge Hub](SQA-KnowHow/) - Comprehensive QA learning resources
+  - [SQA Manual Testing](SQA-KnowHow/SQA-Manual-Testing/) - Manual testing methodologies
+  - [SQA Automation Testing](SQA-KnowHow/SQA-Automation-Testing/) - Automated testing frameworks
+    - [Selenium Learning Project](SQA-KnowHow/SQA-Automation-Testing/SQA-Automation-Testing-Selenium-Learning-Project.md)
+    - [Cypress Learning Project](SQA-KnowHow/SQA-Automation-Testing/SQA-Automation-Testing-Cypress-Learning-Project.md)
+    - [Advanced Concepts](SQA-KnowHow/SQA-Automation-Testing/SQA-Automation-Testing-Advance-Concepts.md)
+    - [Framework Comparison](SQA-KnowHow/SQA-Automation-Testing/SQA-Automation-Testing-Framework-Comparison.md)
+
+### 📊 **AWS DevOps Boilerplates (Root Level)**
+- [S3 Management Scripts](aws-devops-boilerplates/s3/) - S3 bucket management and cleanup
+
+---
+
+## 🎯 **Learning Objectives & Outcomes**
+
+### **By Week 6, You Will Be Able To:**
+- ✅ Design and deploy scalable microservices architectures
+- ✅ Implement comprehensive CI/CD pipelines with multiple tools
+- ✅ Secure applications using industry best practices
+- ✅ Monitor and troubleshoot complex distributed systems
+- ✅ Handle real-world incidents and chaos scenarios
+- ✅ Optimize costs and implement disaster recovery
+- ✅ Present technical solutions to stakeholders
+- ✅ Work effectively in DevSecOps teams
+
+### **Key Skills Developed:**
+- **AWS Services**: EC2, S3, RDS, VPC, ECS, EKS, Lambda, CloudWatch
+- **Infrastructure as Code**: Terraform, CloudFormation
+- **Containerization**: Docker, ECS, EKS, Istio
+- **CI/CD**: Jenkins, GitHub Actions, AWS CodeSuite
+- **Security**: IAM, KMS, Security Hub, penetration testing
+- **Monitoring**: CloudWatch, X-Ray, logging, alerting
+- **Chaos Engineering**: Failure simulation, incident response
+- **Cost Optimization**: Budget management, resource optimization
+
+---
+
+## 🚀 **Getting Started**
+
+### **Prerequisites:**
+- Basic understanding of cloud computing concepts
+- Familiarity with Linux command line
+- AWS account (free tier recommended)
+- Local development environment setup
+
+### **Recommended Learning Path:**
+1. **Start with Week 1** - Build AWS foundations
+2. **Progress sequentially** through each week
+3. **Complete all hands-on projects** in each day
+4. **Practice chaos scenarios** to build resilience
+5. **Document your learning** and create a portfolio
+6. **Participate in peer reviews** and discussions
+
+### **Time Commitment:**
+- **Per Day**: 4-8 hours (depending on week)
+- **Per Week**: 20-40 hours
+- **Total Bootcamp**: 120-240 hours over 6 weeks
+
+---
+
+## 🤝 **Support & Community**
+
+### **Learning Resources:**
+- Daily war rooms and mentor hotlines
+- Peer collaboration and code reviews
+- Real-world scenario simulations
+- Comprehensive documentation and examples
+
+### **Tools & Technologies:**
+- All necessary tools provided or guided installation
+- Cloud-based development environments available
+- Comprehensive boilerplates and templates
+- Security testing and monitoring tools
+
+---
+
+## 📝 **Notes**
+
+- **Chaos Engineering**: Controlled failure simulation to build resilience
+- **Gamification**: Competitive elements to enhance engagement
+- **Real-World Focus**: Practical scenarios and industry best practices
+- **Hands-On Learning**: 60% practical implementation, 40% theory
+- **Continuous Improvement**: Regular updates and community contributions
+
+---
+
+*Prepared by Partha Sarathi Kundu for the DevSecOps Bootcamp project - A comprehensive journey from AWS basics to enterprise DevSecOps mastery.*
+
+## 📄 **License**
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
