@@ -4,6 +4,18 @@ A comprehensive 6-week DevSecOps bootcamp with step-by-step instructions, hands-
 
 ## 📚 Complete Learning Path Index
 
+### 🎯 **Prerequisites - Essential Knowledge Before Starting**
+- [Prerequisites Overview](prerequisite/README.md) - Complete prerequisite learning path
+  - [Cloud Computing Basics](prerequisite/01-Cloud-Computing-Basics/README.md) - AWS and cloud fundamentals
+  - [Linux & Command Line](prerequisite/02-Linux-Command-Line/README.md) - Essential terminal skills
+  - [Networking Fundamentals](prerequisite/03-Networking-Fundamentals/README.md) - Network concepts and protocols
+  - [Programming & Scripting](prerequisite/04-Programming-Scripting/README.md) - Coding and automation basics
+  - [DevOps Fundamentals](prerequisite/05-DevOps-Fundamentals/README.md) - DevOps principles and practices
+  - [Security Basics](prerequisite/06-Security-Basics/README.md) - Security concepts and best practices
+  - [Data & AI/ML Concepts](prerequisite/07-Data-AI-ML-Concepts/README.md) - Data science and AI fundamentals
+  - [Testing & Quality Assurance](prerequisite/08-Testing-QA/README.md) - Testing methodologies and tools
+  - [Tools & Technologies](prerequisite/09-Tools-Technologies/README.md) - Essential tools overview
+
 ### 🗓️ **Week 1: Core AWS Foundations with Chaos Engineering**
 **Goal**: Build AWS basics with controlled chaos to spark engagement and resilience.
 
@@ -401,17 +413,20 @@ A comprehensive 6-week DevSecOps bootcamp with step-by-step instructions, hands-
 - Local development environment setup
 
 ### **Recommended Learning Path:**
-1. **Start with Week 1** - Build AWS foundations
-2. **Progress sequentially** through each week
-3. **Complete all hands-on projects** in each day
-4. **Practice chaos scenarios** to build resilience
-5. **Document your learning** and create a portfolio
-6. **Participate in peer reviews** and discussions
+1. **Complete Prerequisites** - Review essential concepts and tools
+2. **Start with Week 1** - Build AWS foundations
+3. **Progress sequentially** through each week
+4. **Complete all hands-on projects** in each day
+5. **Practice chaos scenarios** to build resilience
+6. **Document your learning** and create a portfolio
+7. **Participate in peer reviews** and discussions
 
 ### **Time Commitment:**
+- **Prerequisites**: 7-10 hours (essential foundation)
 - **Per Day**: 4-8 hours (depending on week)
 - **Per Week**: 20-40 hours
 - **Total Bootcamp**: 120-240 hours over 6 weeks
+- **Total Learning Path**: 127-250 hours (including prerequisites)
 
 ---
 
