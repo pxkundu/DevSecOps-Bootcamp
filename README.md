@@ -338,6 +338,7 @@ A comprehensive 6-week DevSecOps bootcamp with step-by-step instructions, hands-
 ### 🤖 **AI & Data Platform Solutions**
 - [Enterprise AI-Data Platform](AI-DataPlatformSolutions/) - Comprehensive AI/ML platform guide
   - [Foundation & Architecture](AI-DataPlatformSolutions/01-Foundation/)
+    - **[Foundation Project](AI-DataPlatformSolutions/01-Foundation/foundation-project/)** - Complete enterprise AI-Data platform implementation
   - [Data Engineering](AI-DataPlatformSolutions/02-DataEngineering/)
   - [MLOps](AI-DataPlatformSolutions/03-MLOps/)
   - [Infrastructure & DevOps](AI-DataPlatformSolutions/04-Infrastructure/)
@@ -354,6 +355,13 @@ A comprehensive 6-week DevSecOps bootcamp with step-by-step instructions, hands-
     - [Cypress Learning Project](SQA-KnowHow/SQA-Automation-Testing/SQA-Automation-Testing-Cypress-Learning-Project.md)
     - [Advanced Concepts](SQA-KnowHow/SQA-Automation-Testing/SQA-Automation-Testing-Advance-Concepts.md)
     - [Framework Comparison](SQA-KnowHow/SQA-Automation-Testing/SQA-Automation-Testing-Framework-Comparison.md)
+
+### 🏗️ **Foundation Project - Enterprise AI-Data Platform**
+- **[Foundation Project](AI-DataPlatformSolutions/01-Foundation/foundation-project/)** - Complete production-ready enterprise AI-Data platform
+  - **Features**: FastAPI backend, PostgreSQL database, Redis caching, ML pipeline integration
+  - **Architecture**: Microservices, containerized deployment, monitoring, security
+  - **Documentation**: [Project Structure](AI-DataPlatformSolutions/01-Foundation/foundation-project/PROJECT-STRUCTURE.md) | [Deployment Guide](AI-DataPlatformSolutions/01-Foundation/foundation-project/DEPLOYMENT-CHECKLIST.md)
+  - **Getting Started**: [Quick Start Guide](AI-DataPlatformSolutions/01-Foundation/foundation-project/README.md)
 
 ### 📊 **AWS DevOps Boilerplates (Root Level)**
 - [S3 Management Scripts](aws-devops-boilerplates/s3/) - S3 bucket management and cleanup
