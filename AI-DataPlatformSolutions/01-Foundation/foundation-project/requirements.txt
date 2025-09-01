@@ -1,0 +1,112 @@
+# Foundation Project - Enterprise AI-Data Platform
+# Core dependencies for the foundation project
+
+# FastAPI and web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+pydantic==2.5.0
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# Database and ORM
+sqlalchemy==2.0.23
+alembic==1.13.1
+psycopg2-binary==2.9.9
+asyncpg==0.29.0
+
+# Redis and caching
+redis==5.0.1
+aioredis==2.0.1
+
+# Machine Learning
+scikit-learn==1.3.2
+pandas==2.1.4
+numpy==1.25.2
+mlflow==2.8.1
+joblib==1.3.2
+
+# Background tasks
+celery==5.3.4
+flower==2.0.1
+
+# Security
+cryptography==41.0.8
+bcrypt==4.1.2
+python-jose[cryptography]==3.3.0
+
+# Monitoring and observability
+prometheus-client==0.19.0
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-instrumentation-sqlalchemy==0.42b0
+opentelemetry-instrumentation-redis==0.42b0
+jaeger-client==4.8.0
+
+# Logging
+structlog==23.2.0
+python-json-logger==2.0.7
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+httpx==0.25.2
+factory-boy==3.3.0
+
+# Code quality and development
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
+mypy==1.7.1
+pre-commit==3.6.0
+
+# HTTP client
+httpx==0.25.2
+requests==2.31.0
+
+# Data processing
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Configuration management
+python-dotenv==1.0.0
+click==8.1.7
+
+# Utilities
+python-slugify==8.0.1
+python-magic==0.4.27
+pillow==10.1.0
+
+# Development and debugging
+ipython==8.18.1
+jupyter==1.0.0
+notebook==7.0.6
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.8
+mkdocstrings[python]==0.24.0
+
+# Performance and optimization
+gunicorn==21.2.0
+uvloop==0.19.0
+
+# Health checks
+healthcheck==1.3.0
+
+# API documentation
+swagger-ui-bundle==0.0.9
+
+# Environment-specific dependencies
+# Uncomment for production
+# sentry-sdk[fastapi]==1.38.0
+# newrelic==9.1.0
+
+# Uncomment for development
+# watchdog==3.0.0
+# debugpy==1.8.0
