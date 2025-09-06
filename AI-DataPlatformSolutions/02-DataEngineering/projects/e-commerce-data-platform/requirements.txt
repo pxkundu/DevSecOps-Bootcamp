@@ -1,0 +1,76 @@
+# Core Data Engineering
+apache-airflow[celery,postgres,redis]==2.7.0
+apache-airflow-providers-postgres==5.6.0
+apache-airflow-providers-amazon==8.4.0
+pyspark==3.4.1
+kafka-python==2.0.2
+confluent-kafka==2.2.0
+
+# Data Processing & Analytics
+pandas==2.0.3
+numpy==1.24.3
+pyarrow==12.0.1
+dask[complete]==2023.7.1
+polars==0.18.8
+
+# Data Quality & Validation
+great-expectations==0.17.12
+pandera==0.15.1
+pydantic==2.1.1
+
+# Database Connectors
+psycopg2-binary==2.9.7
+sqlalchemy==2.0.19
+pymongo==4.4.1
+redis==4.6.0
+
+# Cloud & Storage
+boto3==1.28.17
+s3fs==2023.6.0
+minio==7.1.15
+
+# API & Web
+fastapi==0.101.0
+uvicorn==0.23.1
+requests==2.31.0
+httpx==0.24.1
+
+# Monitoring & Observability
+prometheus-client==0.17.1
+statsd==4.0.1
+logging-loki==0.3.1
+
+# ML & Feature Engineering
+scikit-learn==1.3.0
+joblib==1.3.1
+mlflow==2.5.0
+feast==0.32.0
+
+# Visualization & Reporting
+plotly==5.15.0
+matplotlib==3.7.2
+seaborn==0.12.2
+
+# Development & Testing
+pytest==7.4.0
+pytest-cov==4.1.0
+black==23.7.0
+flake8==6.0.0
+mypy==1.4.1
+
+# Utilities
+python-dotenv==1.0.0
+click==8.1.6
+tqdm==4.65.0
+schedule==1.2.0
+faker==19.3.0
+
+# Jupyter & Notebooks
+jupyter==1.0.0
+jupyterlab==4.0.3
+ipywidgets==8.0.7
+
+# Configuration & Secrets
+pyyaml==6.0.1
+toml==0.10.2
+python-decouple==3.8

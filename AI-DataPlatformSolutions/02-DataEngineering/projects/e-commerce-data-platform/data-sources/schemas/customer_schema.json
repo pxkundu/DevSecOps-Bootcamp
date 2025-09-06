@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Customer Schema",
+  "description": "Schema for customer data in the e-commerce platform",
+  "type": "object",
+  "required": [
+    "customer_id",
+    "email",
+    "first_name",
+    "last_name",
+    "registration_date"
+  ],
+  "properties": {
+    "customer_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique customer identifier"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Customer email address"
+    },
+    "first_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50,
+      "description": "Customer first name"
+    },
+    "last_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50,
+      "description": "Customer last name"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Customer phone number"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "Customer date of birth"
+    },
+    "gender": {
+      "type": "string",
+      "enum": ["M", "F", "Other"],
+      "description": "Customer gender"
+    },
+    "registration_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when customer registered"
+    },
+    "address": {
+      "type": "object",
+      "properties": {
+        "street": {
+          "type": "string",
+          "description": "Street address"
+        },
+        "city": {
+          "type": "string",
+          "description": "City"
+        },
+        "state": {
+          "type": "string",
+          "description": "State or province"
+        },
+        "zip_code": {
+          "type": "string",
+          "description": "ZIP or postal code"
+        },
+        "country": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 2,
+          "description": "Country code (ISO 3166-1 alpha-2)"
+        }
+      },
+      "required": ["street", "city", "state", "zip_code", "country"]
+    },
+    "preferences": {
+      "type": "object",
+      "properties": {
+        "newsletter": {
+          "type": "boolean",
+          "description": "Newsletter subscription preference"
+        },
+        "sms_notifications": {
+          "type": "boolean",
+          "description": "SMS notification preference"
+        },
+        "preferred_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Preferred product categories"
+        }
+      }
+    },
+    "loyalty_tier": {
+      "type": "string",
+      "enum": ["Bronze", "Silver", "Gold", "Platinum"],
+      "description": "Customer loyalty tier"
+    },
+    "total_spent": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total amount spent by customer"
+    },
+    "last_login": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last login timestamp"
+    }
+  }
+}

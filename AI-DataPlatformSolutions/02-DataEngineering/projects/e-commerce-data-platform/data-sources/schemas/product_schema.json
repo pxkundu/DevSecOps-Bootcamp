@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Product Schema",
+  "description": "Schema for product catalog data in the e-commerce platform",
+  "type": "object",
+  "required": [
+    "product_id",
+    "sku",
+    "name",
+    "category",
+    "price",
+    "is_active"
+  ],
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique product identifier"
+    },
+    "sku": {
+      "type": "string",
+      "pattern": "^SKU-[0-9]{6}$",
+      "description": "Stock Keeping Unit"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Product name"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Product description"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["Electronics", "Clothing", "Home & Garden", "Books", "Sports"],
+      "description": "Product category"
+    },
+    "subcategory": {
+      "type": "string",
+      "description": "Product subcategory"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Product brand"
+    },
+    "price": {
+      "type": "number",
+      "minimum": 0,
+      "multipleOf": 0.01,
+      "description": "Product price"
+    },
+    "cost": {
+      "type": "number",
+      "minimum": 0,
+      "multipleOf": 0.01,
+      "description": "Product cost"
+    },
+    "weight": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Product weight in kg"
+    },
+    "dimensions": {
+      "type": "object",
+      "properties": {
+        "length": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length in cm"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Width in cm"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Height in cm"
+        }
+      },
+      "required": ["length", "width", "height"]
+    },
+    "inventory": {
+      "type": "object",
+      "properties": {
+        "stock_quantity": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Current stock quantity"
+        },
+        "reserved_quantity": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reserved stock quantity"
+        },
+        "reorder_point": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reorder point threshold"
+        },
+        "supplier_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Supplier identifier"
+        }
+      },
+      "required": ["stock_quantity", "reorder_point"]
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Average customer rating"
+    },
+    "review_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of customer reviews"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["popular", "new", "sale", "featured", "limited"]
+      },
+      "description": "Product tags"
+    },
+    "is_active": {
+      "type": "boolean",
+      "description": "Whether product is active"
+    },
+    "created_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Product creation date"
+    },
+    "updated_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
+    }
+  }
+}

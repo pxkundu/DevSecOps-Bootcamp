@@ -1,0 +1,143 @@
+# Prometheus Configuration for E-Commerce Data Platform
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'ecommerce-data-platform'
+    environment: 'development'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Load alerting rules
+rule_files:
+  - "rules/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # Node Exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  # Redis Exporter
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+
+  # Kafka Exporter
+  - job_name: 'kafka-exporter'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+    scrape_interval: 30s
+
+  # JMX Exporter for Kafka JVM metrics
+  - job_name: 'kafka-jmx'
+    static_configs:
+      - targets: ['kafka:7071']
+    scrape_interval: 30s
+
+  # Airflow metrics
+  - job_name: 'airflow'
+    static_configs:
+      - targets: ['airflow-webserver:8080']
+    scrape_interval: 30s
+    metrics_path: /admin/metrics/
+    basic_auth:
+      username: admin
+      password: admin
+
+  # Spark metrics (when running)
+  - job_name: 'spark-master'
+    static_configs:
+      - targets: ['spark-master:8080']
+    scrape_interval: 30s
+    metrics_path: /metrics/master/prometheus/
+
+  - job_name: 'spark-worker'
+    static_configs:
+      - targets: ['spark-worker:8081']
+    scrape_interval: 30s
+    metrics_path: /metrics/prometheus/
+
+  # Custom application metrics
+  - job_name: 'data-quality-metrics'
+    static_configs:
+      - targets: ['data-quality-service:8000']
+    scrape_interval: 60s
+    metrics_path: /metrics
+
+  # MinIO metrics
+  - job_name: 'minio'
+    static_configs:
+      - targets: ['minio:9000']
+    scrape_interval: 30s
+    metrics_path: /minio/v2/metrics/cluster
+
+  # Elasticsearch metrics
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    scrape_interval: 30s
+    metrics_path: /_prometheus/metrics
+
+  # Jupyter metrics (if exposed)
+  - job_name: 'jupyter'
+    static_configs:
+      - targets: ['jupyter:8888']
+    scrape_interval: 60s
+    metrics_path: /metrics
+
+  # Custom pipeline metrics
+  - job_name: 'pipeline-metrics'
+    file_sd_configs:
+      - files:
+        - '/etc/prometheus/file_sd/pipeline-targets.json'
+    scrape_interval: 30s
+
+  # Docker container metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 30s
+
+# Remote write configuration (for long-term storage)
+# remote_write:
+#   - url: "https://prometheus-remote-storage-endpoint/api/v1/write"
+#     basic_auth:
+#       username: "your-username"
+#       password: "your-password"
+
+# Remote read configuration
+# remote_read:
+#   - url: "https://prometheus-remote-storage-endpoint/api/v1/read"
+#     basic_auth:
+#       username: "your-username"
+#       password: "your-password"
+
+# Storage configuration
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB
+    wal-compression: true
