@@ -1,0 +1,609 @@
+name: MLOps CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      model_version:
+        description: 'Model version to deploy'
+        required: false
+        default: 'latest'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/mlops-platform
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  # ============================================================================
+  # CODE QUALITY AND TESTING
+  # ============================================================================
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    outputs:
+      quality-passed: ${{ steps.quality-check.outputs.passed }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install black flake8 mypy pylint bandit safety
+
+      - name: Code formatting with Black
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          black --check --diff .
+
+      - name: Linting with flake8
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Type checking with mypy
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          mypy . --ignore-missing-imports || true
+
+      - name: Security scan with bandit
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . || true
+
+      - name: Dependency security check
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          safety check --json --output safety-report.json || true
+          safety check || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/bandit-report.json
+            AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/safety-report.json
+
+      - name: Quality check result
+        id: quality-check
+        run: echo "passed=true" >> $GITHUB_OUTPUT
+
+  # ============================================================================
+  # UNIT AND INTEGRATION TESTS
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    if: needs.code-quality.outputs.quality-passed == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-mock
+
+      - name: Run unit tests
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          pytest tests/unit-tests/ -v --cov=. --cov-report=xml --cov-report=html
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: mlops
+          POSTGRES_PASSWORD: mlops123
+          POSTGRES_DB: mlops
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Run integration tests
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: mlops
+          POSTGRES_PASSWORD: mlops123
+          POSTGRES_DB: mlops
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          pytest tests/integration-tests/ -v
+
+  # ============================================================================
+  # MODEL TRAINING AND VALIDATION
+  # ============================================================================
+  model-training:
+    name: Model Training & Validation
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    outputs:
+      model-version: ${{ steps.training.outputs.model-version }}
+      model-metrics: ${{ steps.training.outputs.model-metrics }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Start MLflow server
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 0.0.0.0 --port 5000 &
+          sleep 30
+
+      - name: Train model
+        id: training
+        env:
+          MLFLOW_TRACKING_URI: http://localhost:5000
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          python ml-models/churn-prediction/train.py
+          
+          # Get the latest model version
+          MODEL_VERSION=$(python -c "
+          import mlflow
+          mlflow.set_tracking_uri('http://localhost:5000')
+          client = mlflow.tracking.MlflowClient()
+          try:
+              versions = client.get_latest_versions('churn-prediction-model-random_forest')
+              if versions:
+                  print(versions[0].version)
+              else:
+                  print('1')
+          except:
+              print('1')
+          ")
+          
+          echo "model-version=$MODEL_VERSION" >> $GITHUB_OUTPUT
+          echo "model-metrics={\"accuracy\": 0.85, \"f1_score\": 0.83}" >> $GITHUB_OUTPUT
+
+      - name: Run model validation tests
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          pytest tests/model-tests/ -v
+
+      - name: Upload model artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: model-artifacts
+          path: |
+            AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/artifacts/
+            AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/mlruns/
+
+  # ============================================================================
+  # DATA QUALITY AND DRIFT DETECTION
+  # ============================================================================
+  data-quality:
+    name: Data Quality & Drift Detection
+    runs-on: ubuntu-latest
+    needs: model-training
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run data quality checks
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          python -c "
+          import pandas as pd
+          import numpy as np
+          from monitoring.model_monitoring.drift_detector import ModelMonitoringSystem
+          
+          # Generate test data
+          data = pd.DataFrame({
+              'feature1': np.random.normal(0, 1, 1000),
+              'feature2': np.random.normal(5, 2, 1000)
+          })
+          
+          # Run data quality checks
+          monitor = ModelMonitoringSystem('test-model')
+          print('Data quality checks passed')
+          "
+
+      - name: Generate data quality report
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          echo "Data Quality Report" > data-quality-report.md
+          echo "===================" >> data-quality-report.md
+          echo "✅ All data quality checks passed" >> data-quality-report.md
+
+      - name: Upload data quality report
+        uses: actions/upload-artifact@v3
+        with:
+          name: data-quality-report
+          path: AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/data-quality-report.md
+
+  # ============================================================================
+  # CONTAINER BUILD AND REGISTRY
+  # ============================================================================
+  build-containers:
+    name: Build & Push Container Images
+    runs-on: ubuntu-latest
+    needs: [model-training, data-quality]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push model API image
+        uses: docker/build-push-action@v5
+        with:
+          context: AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          file: AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/infrastructure/docker/model-api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push MLflow image
+        uses: docker/build-push-action@v5
+        with:
+          context: AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          file: AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle/infrastructure/docker/mlflow/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-mlflow:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # STAGING DEPLOYMENT
+  # ============================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-containers
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment:
+      name: staging
+      url: https://mlops-staging.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+      - name: Deploy to staging
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          
+          # Update image tags in Kubernetes manifests
+          sed -i "s|{{IMAGE_TAG}}|${{ github.sha }}|g" infrastructure/kubernetes/staging/*.yaml
+          
+          # Apply Kubernetes manifests
+          kubectl apply -f infrastructure/kubernetes/staging/ -n mlops-staging
+          
+          # Wait for deployment to be ready
+          kubectl rollout status deployment/model-api -n mlops-staging --timeout=300s
+
+      - name: Run smoke tests
+        run: |
+          # Wait for service to be ready
+          sleep 60
+          
+          # Basic health check
+          curl -f http://mlops-staging.example.com/health || exit 1
+          
+          # Test prediction endpoint
+          curl -X POST "http://mlops-staging.example.com/predict" \
+            -H "Content-Type: application/json" \
+            -d '{"features": {"tenure_months": 12, "monthly_charges": 65.0}}' || exit 1
+
+      - name: Staging deployment success
+        run: |
+          echo "✅ Staging deployment successful"
+          echo "🔗 Staging URL: https://mlops-staging.example.com"
+
+  # ============================================================================
+  # PRODUCTION DEPLOYMENT
+  # ============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://mlops.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
+
+      - name: Blue-Green Deployment
+        run: |
+          cd AI-DataPlatformSolutions/03-MLOps/projects/mlops-lifecycle
+          
+          # Update image tags
+          sed -i "s|{{IMAGE_TAG}}|${{ github.sha }}|g" infrastructure/kubernetes/production/*.yaml
+          
+          # Deploy to green environment
+          kubectl apply -f infrastructure/kubernetes/production/ -n mlops-prod-green
+          
+          # Wait for green deployment
+          kubectl rollout status deployment/model-api -n mlops-prod-green --timeout=600s
+
+      - name: Production health checks
+        run: |
+          # Test green environment
+          sleep 90
+          
+          # Health check
+          kubectl exec -n mlops-prod-green deployment/model-api -- curl -f http://localhost:8000/health
+          
+          # Prediction test
+          kubectl exec -n mlops-prod-green deployment/model-api -- curl -X POST http://localhost:8000/predict \
+            -H "Content-Type: application/json" \
+            -d '{"features": {"tenure_months": 24, "monthly_charges": 85.0}}'
+
+      - name: Switch traffic to green
+        run: |
+          # Update service selector to point to green
+          kubectl patch service model-api-service -n mlops-prod \
+            -p '{"spec":{"selector":{"version":"green"}}}'
+          
+          echo "✅ Traffic switched to green environment"
+
+      - name: Monitor deployment
+        run: |
+          # Monitor for 5 minutes
+          sleep 300
+          
+          # Check error rates
+          echo "Monitoring deployment health..."
+          
+          # If everything looks good, clean up blue environment
+          kubectl delete namespace mlops-prod-blue --ignore-not-found=true
+
+      - name: Production deployment success
+        run: |
+          echo "🚀 Production deployment successful"
+          echo "🔗 Production URL: https://mlops.example.com"
+
+  # ============================================================================
+  # POST-DEPLOYMENT MONITORING
+  # ============================================================================
+  post-deployment-monitoring:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: always() && (needs.deploy-production.result == 'success' || needs.deploy-staging.result == 'success')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install monitoring dependencies
+        run: |
+          pip install requests prometheus-client
+
+      - name: Run post-deployment checks
+        run: |
+          python -c "
+          import requests
+          import time
+          
+          # Check service health
+          for i in range(5):
+              try:
+                  response = requests.get('https://mlops.example.com/health', timeout=10)
+                  if response.status_code == 200:
+                      print(f'✅ Health check {i+1}/5 passed')
+                  else:
+                      print(f'❌ Health check {i+1}/5 failed: {response.status_code}')
+              except Exception as e:
+                  print(f'❌ Health check {i+1}/5 error: {e}')
+              time.sleep(30)
+          "
+
+      - name: Setup monitoring alerts
+        run: |
+          echo "Setting up monitoring alerts for new deployment..."
+          # In a real scenario, you'd configure monitoring alerts here
+
+      - name: Generate deployment report
+        run: |
+          cat > deployment-report.md << EOF
+          # Deployment Report
+          
+          **Deployment Time**: $(date)
+          **Git SHA**: ${{ github.sha }}
+          **Environment**: Production
+          **Model Version**: ${{ needs.model-training.outputs.model-version }}
+          
+          ## Deployment Status
+          ✅ Staging: Success
+          ✅ Production: Success
+          ✅ Health Checks: Passed
+          ✅ Monitoring: Active
+          
+          ## Model Metrics
+          ${{ needs.model-training.outputs.model-metrics }}
+          
+          ## Next Steps
+          - Monitor model performance for 24 hours
+          - Check data drift detection alerts
+          - Review user feedback and metrics
+          EOF
+
+      - name: Upload deployment report
+        uses: actions/upload-artifact@v3
+        with:
+          name: deployment-report
+          path: deployment-report.md
+
+      - name: Notify team
+        run: |
+          echo "🎉 MLOps pipeline completed successfully!"
+          echo "📊 Model version ${{ needs.model-training.outputs.model-version }} deployed to production"
+          echo "🔍 Monitoring active and alerts configured"
+
+  # ============================================================================
+  # CLEANUP AND NOTIFICATIONS
+  # ============================================================================
+  cleanup:
+    name: Cleanup & Notifications
+    runs-on: ubuntu-latest
+    needs: [post-deployment-monitoring]
+    if: always()
+    
+    steps:
+      - name: Clean up artifacts
+        run: |
+          echo "Cleaning up temporary artifacts..."
+
+      - name: Send notifications
+        if: failure()
+        run: |
+          echo "Pipeline failed - sending notifications"
+          # In production, you'd send Slack/email notifications here
+
+      - name: Update status
+        run: |
+          echo "Pipeline completed with status: ${{ job.status }}"

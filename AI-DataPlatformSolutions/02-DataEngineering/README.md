@@ -354,26 +354,287 @@ load_task = PythonOperator(
 extract_task >> transform_task >> load_task
 ```
 
-## 8. **Best Practices**
+## 7. **Data Governance & Security**
 
-### **Data Pipeline Design**
-1. **Modularity**: Break pipelines into reusable components
-2. **Error Handling**: Implement comprehensive error handling
-3. **Monitoring**: Add monitoring and alerting at each stage
-4. **Testing**: Test pipelines with sample data
-5. **Documentation**: Document data lineage and transformations
+### **Data Governance Framework**
 
-### **Data Quality Management**
-1. **Automated Validation**: Implement automated data quality checks
-2. **Data Profiling**: Regular data profiling and monitoring
-3. **Business Rules**: Define and enforce business rules
-4. **Feedback Loop**: Continuous improvement based on quality metrics
+```mermaid
+graph TB
+    subgraph "🏛️ Data Governance"
+        subgraph "👥 People & Roles"
+            DG1["👑 Data Stewards<br/>Domain Experts"]
+            DG2["🔧 Data Engineers<br/>Technical Implementation"]
+            DG3["📊 Data Analysts<br/>Business Users"]
+            DG4["🏛️ Data Governance Council<br/>Strategic Oversight"]
+        end
+        
+        subgraph "📋 Policies & Standards"
+            POL1["📜 Data Policies<br/>Access & Usage Rules"]
+            POL2["📏 Data Standards<br/>Formats & Quality"]
+            POL3["🔒 Privacy Policies<br/>GDPR Compliance"]
+            POL4["🛡️ Security Policies<br/>Protection Measures"]
+        end
+        
+        subgraph "🔧 Tools & Processes"
+            TOOL1["📚 Data Catalog<br/>Metadata Management"]
+            TOOL2["🔍 Data Lineage<br/>Flow Tracking"]
+            TOOL3["✅ Data Quality<br/>Monitoring"]
+            TOOL4["🚨 Compliance Monitoring<br/>Audit Trails"]
+        end
+    end
+    
+    DG1 --> POL1
+    DG2 --> POL2
+    DG3 --> POL3
+    DG4 --> POL4
+    
+    POL1 --> TOOL1
+    POL2 --> TOOL2
+    POL3 --> TOOL3
+    POL4 --> TOOL4
 
-### **Performance Optimization**
-1. **Partitioning**: Implement appropriate data partitioning
-2. **Caching**: Use caching for frequently accessed data
-3. **Parallelization**: Parallelize data processing where possible
-4. **Resource Management**: Optimize resource allocation
+    classDef peopleClass fill:#e3f2fd,stroke:#1976d2
+    classDef policyClass fill:#f3e5f5,stroke:#7b1fa2
+    classDef toolClass fill:#e8f5e8,stroke:#388e3c
+
+    class DG1,DG2,DG3,DG4 peopleClass
+    class POL1,POL2,POL3,POL4 policyClass
+    class TOOL1,TOOL2,TOOL3,TOOL4 toolClass
+```
+
+### **Data Security Architecture**
+
+```mermaid
+graph LR
+    subgraph "🔒 Security Layers"
+        subgraph "🌐 Network Security"
+            NS1["🛡️ VPC<br/>Network Isolation"]
+            NS2["🔥 Firewall<br/>Traffic Control"]
+            NS3["🔐 VPN<br/>Secure Access"]
+        end
+        
+        subgraph "🔐 Authentication & Authorization"
+            AUTH1["🎫 Identity Provider<br/>SSO/LDAP"]
+            AUTH2["👥 RBAC<br/>Role-based Access"]
+            AUTH3["🔑 API Keys<br/>Service Authentication"]
+        end
+        
+        subgraph "🛡️ Data Protection"
+            DP1["🔒 Encryption at Rest<br/>AES-256"]
+            DP2["🔐 Encryption in Transit<br/>TLS 1.3"]
+            DP3["🗝️ Key Management<br/>HSM/Vault"]
+        end
+        
+        subgraph "📊 Monitoring & Compliance"
+            MON1["📋 Audit Logs<br/>Activity Tracking"]
+            MON2["🚨 Anomaly Detection<br/>Behavior Analysis"]
+            MON3["📊 Compliance Reports<br/>Regulatory Requirements"]
+        end
+    end
+    
+    NS1 --> AUTH1
+    NS2 --> AUTH2
+    NS3 --> AUTH3
+    
+    AUTH1 --> DP1
+    AUTH2 --> DP2
+    AUTH3 --> DP3
+    
+    DP1 --> MON1
+    DP2 --> MON2
+    DP3 --> MON3
+
+    classDef networkClass fill:#ffebee,stroke:#d32f2f
+    classDef authClass fill:#e8f5e8,stroke:#388e3c
+    classDef protectionClass fill:#fff3e0,stroke:#f57c00
+    classDef monitorClass fill:#e3f2fd,stroke:#1976d2
+
+    class NS1,NS2,NS3 networkClass
+    class AUTH1,AUTH2,AUTH3 authClass
+    class DP1,DP2,DP3 protectionClass
+    class MON1,MON2,MON3 monitorClass
+```
+
+## 8. **Modern Data Engineering Patterns**
+
+### **Event-Driven Data Architecture**
+
+```mermaid
+sequenceDiagram
+    participant Producer as 📱 Data Producer
+    participant EventBus as ⚡ Event Bus (Kafka)
+    participant Consumer as 🔄 Data Consumer
+    participant Store as 💾 Data Store
+    participant Analytics as 📊 Analytics
+
+    Producer->>EventBus: 1. Publish Event
+    EventBus->>Consumer: 2. Stream Event
+    Consumer->>Consumer: 3. Process Event
+    Consumer->>Store: 4. Store Processed Data
+    
+    Store->>Analytics: 5. Query Data
+    Analytics-->>Producer: 6. Feedback Loop
+    
+    Note over Producer,Analytics: Real-time Data Flow
+```
+
+### **Data Mesh Architecture**
+
+```mermaid
+graph TB
+    subgraph "🌐 Data Mesh"
+        subgraph "🏢 Sales Domain"
+            SALES_PROD["📊 Sales Data Product"]
+            SALES_PIPE["🔄 Sales Pipeline"]
+            SALES_API["🌐 Sales API"]
+        end
+        
+        subgraph "👥 Customer Domain"
+            CUST_PROD["👤 Customer Data Product"]
+            CUST_PIPE["🔄 Customer Pipeline"]
+            CUST_API["🌐 Customer API"]
+        end
+        
+        subgraph "📦 Inventory Domain"
+            INV_PROD["📦 Inventory Data Product"]
+            INV_PIPE["🔄 Inventory Pipeline"]
+            INV_API["🌐 Inventory API"]
+        end
+        
+        subgraph "🛠️ Shared Infrastructure"
+            PLATFORM["🏗️ Data Platform"]
+            GOVERNANCE["🏛️ Data Governance"]
+            CATALOG["📚 Data Catalog"]
+        end
+    end
+    
+    SALES_PROD --> SALES_PIPE
+    SALES_PIPE --> SALES_API
+    
+    CUST_PROD --> CUST_PIPE
+    CUST_PIPE --> CUST_API
+    
+    INV_PROD --> INV_PIPE
+    INV_PIPE --> INV_API
+    
+    SALES_API --> PLATFORM
+    CUST_API --> PLATFORM
+    INV_API --> PLATFORM
+    
+    PLATFORM --> GOVERNANCE
+    GOVERNANCE --> CATALOG
+
+    classDef domainClass fill:#e3f2fd,stroke:#1976d2
+    classDef sharedClass fill:#f3e5f5,stroke:#7b1fa2
+
+    class SALES_PROD,SALES_PIPE,SALES_API,CUST_PROD,CUST_PIPE,CUST_API,INV_PROD,INV_PIPE,INV_API domainClass
+    class PLATFORM,GOVERNANCE,CATALOG sharedClass
+```
+
+### **DataOps Lifecycle**
+
+```mermaid
+graph LR
+    subgraph "🔄 DataOps Cycle"
+        DEV["💻 Development<br/>Pipeline Design"]
+        TEST["🧪 Testing<br/>Data Validation"]
+        DEPLOY["🚀 Deployment<br/>Production Release"]
+        MONITOR["📊 Monitoring<br/>Performance Tracking"]
+        FEEDBACK["🔄 Feedback<br/>Continuous Improvement"]
+        
+        DEV --> TEST
+        TEST --> DEPLOY
+        DEPLOY --> MONITOR
+        MONITOR --> FEEDBACK
+        FEEDBACK --> DEV
+    end
+    
+    subgraph "🛠️ Supporting Tools"
+        GIT["📁 Version Control<br/>Git/GitLab"]
+        CI["🔄 CI/CD<br/>Jenkins/GitHub Actions"]
+        INFRA["🏗️ Infrastructure<br/>Terraform/Ansible"]
+        OBSERVE["👁️ Observability<br/>Prometheus/Grafana"]
+    end
+    
+    DEV --> GIT
+    TEST --> CI
+    DEPLOY --> INFRA
+    MONITOR --> OBSERVE
+
+    classDef cycleClass fill:#e8f5e8,stroke:#388e3c
+    classDef toolClass fill:#fff3e0,stroke:#f57c00
+
+    class DEV,TEST,DEPLOY,MONITOR,FEEDBACK cycleClass
+    class GIT,CI,INFRA,OBSERVE toolClass
+```
+
+## 9. **Best Practices**
+
+### **Data Pipeline Design Principles**
+
+```mermaid
+mindmap
+  root((Data Pipeline Best Practices))
+    🏗️ Design Principles
+      Modularity
+      Reusability
+      Scalability
+      Fault Tolerance
+    🔍 Quality Assurance
+      Automated Testing
+      Data Validation
+      Schema Evolution
+      Regression Testing
+    📊 Monitoring & Observability
+      Real-time Metrics
+      Alerting Systems
+      Log Aggregation
+      Performance Tracking
+    🔒 Security & Compliance
+      Access Controls
+      Data Encryption
+      Audit Trails
+      Privacy Protection
+    ⚡ Performance Optimization
+      Parallel Processing
+      Intelligent Caching
+      Resource Management
+      Cost Optimization
+```
+
+### **Data Quality Framework**
+
+```mermaid
+graph TB
+    subgraph "✅ Data Quality Dimensions"
+        DQ1["🎯 Accuracy<br/>Correctness of Data"]
+        DQ2["📊 Completeness<br/>No Missing Values"]
+        DQ3["🔄 Consistency<br/>Format Standards"]
+        DQ4["⏰ Timeliness<br/>Data Freshness"]
+        DQ5["✅ Validity<br/>Business Rules"]
+        DQ6["🔗 Integrity<br/>Referential Consistency"]
+    end
+    
+    subgraph "🔧 Quality Tools"
+        TOOL1["🧪 Great Expectations<br/>Automated Testing"]
+        TOOL2["📊 Data Profiling<br/>Statistical Analysis"]
+        TOOL3["🚨 Anomaly Detection<br/>ML-based Monitoring"]
+        TOOL4["📋 Quality Dashboards<br/>Real-time Reporting"]
+    end
+    
+    DQ1 --> TOOL1
+    DQ2 --> TOOL1
+    DQ3 --> TOOL2
+    DQ4 --> TOOL3
+    DQ5 --> TOOL1
+    DQ6 --> TOOL4
+
+    classDef qualityClass fill:#e8f5e8,stroke:#388e3c
+    classDef toolClass fill:#e3f2fd,stroke:#1976d2
+
+    class DQ1,DQ2,DQ3,DQ4,DQ5,DQ6 qualityClass
+    class TOOL1,TOOL2,TOOL3,TOOL4 toolClass
+```
 
 ---
 

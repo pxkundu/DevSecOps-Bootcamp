@@ -1,0 +1,343 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for MLflow and Feature Store
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: mlops
+      POSTGRES_PASSWORD: mlops123
+      POSTGRES_DB: mlops
+      POSTGRES_MULTIPLE_DATABASES: mlflow,feast,monitoring
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/setup/init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - mlops-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mlops"]
+      interval: 5s
+      retries: 5
+
+  # Redis for Feature Store Online Storage
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - mlops-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+
+  # MinIO for Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ACCESS_KEY: mlopsadmin
+      MINIO_SECRET_KEY: mlopsadmin123
+    volumes:
+      - minio_data:/data
+    networks:
+      - mlops-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # MLflow Tracking Server
+  mlflow-server:
+    build:
+      context: .
+      dockerfile: ./infrastructure/docker/mlflow/Dockerfile
+    environment:
+      - AWS_ACCESS_KEY_ID=mlopsadmin
+      - AWS_SECRET_ACCESS_KEY=mlopsadmin123
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+      - MLFLOW_BACKEND_STORE_URI=postgresql://mlops:mlops123@postgres:5432/mlflow
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=s3://mlflow-artifacts
+    ports:
+      - "5000:5000"
+    networks:
+      - mlops-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Feast Feature Store
+  feast-server:
+    build:
+      context: .
+      dockerfile: ./infrastructure/docker/feast/Dockerfile
+    environment:
+      - FEAST_POSTGRES_HOST=postgres
+      - FEAST_POSTGRES_PORT=5432
+      - FEAST_POSTGRES_DATABASE=feast
+      - FEAST_POSTGRES_USER=mlops
+      - FEAST_POSTGRES_PASSWORD=mlops123
+      - FEAST_REDIS_HOST=redis
+      - FEAST_REDIS_PORT=6379
+    ports:
+      - "6566:6566"
+    networks:
+      - mlops-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./feature-engineering/feature-store:/feast
+
+  # Jupyter Lab for Experimentation
+  jupyter:
+    build:
+      context: .
+      dockerfile: ./infrastructure/docker/jupyter/Dockerfile
+    ports:
+      - "8888:8888"
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      JUPYTER_TOKEN: "mlops-platform"
+      MLFLOW_TRACKING_URI: "http://mlflow-server:5000"
+    volumes:
+      - ./notebooks:/home/jovyan/work/notebooks
+      - ./ml-models:/home/jovyan/work/ml-models
+      - ./data:/home/jovyan/work/data
+      - ./feature-engineering:/home/jovyan/work/feature-engineering
+      - ./training:/home/jovyan/work/training
+    networks:
+      - mlops-network
+    depends_on:
+      - mlflow-server
+      - feast-server
+
+  # Prometheus for Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/rules:/etc/prometheus/rules
+      - prometheus_data:/prometheus
+    networks:
+      - mlops-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.retention.time=30d'
+
+  # Grafana for Monitoring Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - mlops-network
+    depends_on:
+      - prometheus
+
+  # Model Serving API
+  model-api:
+    build:
+      context: .
+      dockerfile: ./infrastructure/docker/model-api/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+      - FEAST_REGISTRY_PATH=/feast/feature_store.yaml
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=mlops
+      - POSTGRES_USER=mlops
+      - POSTGRES_PASSWORD=mlops123
+    volumes:
+      - ./serving:/app/serving
+      - ./feature-engineering/feature-store:/feast
+    networks:
+      - mlops-network
+    depends_on:
+      - mlflow-server
+      - feast-server
+      - redis
+      - postgres
+
+  # Ray Cluster for Distributed Training
+  ray-head:
+    image: rayproject/ray:2.7.0-py310
+    ports:
+      - "8265:8265"  # Ray Dashboard
+      - "10001:10001"  # Ray Client
+    command: >
+      ray start --head --dashboard-host=0.0.0.0 --dashboard-port=8265
+      --port=6379 --object-manager-port=8076 --node-manager-port=8077
+      --dashboard-agent-grpc-port=8078 --dashboard-agent-listen-port=8079
+      --min-worker-port=10000 --max-worker-port=19999 --block
+    networks:
+      - mlops-network
+    volumes:
+      - ./training:/workspace/training
+      - ./ml-models:/workspace/ml-models
+      - ./data:/workspace/data
+    environment:
+      - RAY_DISABLE_IMPORT_WARNING=1
+
+  # Data Pipeline Scheduler (Airflow alternative - lightweight)
+  pipeline-scheduler:
+    build:
+      context: .
+      dockerfile: ./infrastructure/docker/scheduler/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=mlops
+      - POSTGRES_USER=mlops
+      - POSTGRES_PASSWORD=mlops123
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+      - FEAST_REGISTRY_PATH=/feast/feature_store.yaml
+    volumes:
+      - ./training/pipelines:/app/pipelines
+      - ./feature-engineering:/app/feature-engineering
+      - ./scripts:/app/scripts
+    networks:
+      - mlops-network
+    depends_on:
+      - postgres
+      - mlflow-server
+      - feast-server
+
+  # Model Monitoring Service
+  monitoring-service:
+    build:
+      context: .
+      dockerfile: ./infrastructure/docker/monitoring/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=monitoring
+      - POSTGRES_USER=mlops
+      - POSTGRES_PASSWORD=mlops123
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+      - PROMETHEUS_HOST=prometheus
+      - PROMETHEUS_PORT=9090
+    volumes:
+      - ./monitoring/model-monitoring:/app/monitoring
+      - ./monitoring/data-drift:/app/drift
+    networks:
+      - mlops-network
+    depends_on:
+      - postgres
+      - mlflow-server
+      - prometheus
+
+  # Kafka for Real-time Model Inference Requests (Optional)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - mlops-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    networks:
+      - mlops-network
+
+  # Kafka UI for monitoring
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    networks:
+      - mlops-network
+
+  # Elasticsearch for Logging
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - mlops-network
+
+  # Kibana for Log Visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - mlops-network
+    depends_on:
+      - elasticsearch
+
+volumes:
+  postgres_data:
+  minio_data:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:
+
+networks:
+  mlops-network:
+    driver: bridge
+    name: mlops-platform

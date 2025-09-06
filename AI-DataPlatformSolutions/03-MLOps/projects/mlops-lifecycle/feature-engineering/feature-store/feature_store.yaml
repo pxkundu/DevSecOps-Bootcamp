@@ -1,0 +1,22 @@
+# Feast Feature Store Configuration
+project: mlops_platform
+registry:
+  registry_type: sql
+  path: postgresql://mlops:mlops123@postgres:5432/feast
+
+provider: local
+
+online_store:
+  type: redis
+  connection_string: redis:6379
+
+offline_store:
+  type: postgres
+  host: postgres
+  port: 5432
+  database: feast
+  db_schema: public
+  user: mlops
+  password: mlops123
+
+entity_key_serialization_version: 2

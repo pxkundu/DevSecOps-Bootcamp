@@ -6,43 +6,140 @@ This document provides a comprehensive overview of the e-commerce data platform 
 
 The e-commerce data platform follows a modern, cloud-native architecture that supports both batch and real-time data processing. The platform is designed to be scalable, fault-tolerant, and maintainable.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          E-COMMERCE DATA PLATFORM                              │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                 │
-│  ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐           │
-│  │   Data Sources  │────│   Ingestion      │────│   Processing    │           │
-│  │                 │    │                  │    │                 │           │
-│  │ • Web Events    │    │ • Apache Kafka   │    │ • Apache Spark  │           │
-│  │ • Databases     │    │ • Apache Airflow │    │ • Apache Flink  │           │
-│  │ • APIs          │    │ • Stream APIs    │    │ • dbt           │           │
-│  │ • Files         │    │ • Batch Jobs     │    │ • Great Expect. │           │
-│  └─────────────────┘    └──────────────────┘    └─────────────────┘           │
-│           │                       │                       │                    │
-│           └───────────────────────┼───────────────────────┘                    │
-│                                   │                                            │
-│  ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐           │
-│  │   Storage       │────│   Serving        │────│   Applications  │           │
-│  │                 │    │                  │    │                 │           │
-│  │ • Data Lake     │    │ • Data Warehouse │    │ • Dashboards    │           │
-│  │ • Data Warehouse│    │ • Feature Store  │    │ • ML Models     │           │
-│  │ • Feature Store │    │ • APIs           │    │ • Reports       │           │
-│  │ • Cache         │    │ • Cache          │    │ • Alerts        │           │
-│  └─────────────────┘    └──────────────────┘    └─────────────────┘           │
-│                                                                                 │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                         INFRASTRUCTURE & MONITORING                            │
-│                                                                                 │
-│  ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐           │
-│  │  Infrastructure │    │   Orchestration  │    │   Monitoring    │           │
-│  │                 │    │                  │    │                 │           │
-│  │ • Kubernetes    │    │ • Apache Airflow │    │ • Prometheus    │           │
-│  │ • Docker        │    │ • Kubernetes     │    │ • Grafana       │           │
-│  │ • Terraform     │    │ • Workflows      │    │ • ELK Stack     │           │
-│  │ • Cloud Services│    │ • Schedulers     │    │ • Alertmanager  │           │
-│  └─────────────────┘    └──────────────────┘    └─────────────────┘           │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "🏢 E-COMMERCE DATA PLATFORM"
+        subgraph "📊 DATA LAYER"
+            subgraph "📥 Sources"
+                DS1["🌐 Web Events<br/>Clickstreams, Sessions"]
+                DS2["🗄️ Databases<br/>OLTP Systems"]
+                DS3["🔗 APIs<br/>External Services"]
+                DS4["📄 Files<br/>Logs, Reports"]
+            end
+            
+            subgraph "📨 Ingestion"
+                IN1["⚡ Apache Kafka<br/>Event Streaming"]
+                IN2["🔄 Apache Airflow<br/>Workflow Orchestration"]
+                IN3["🌊 Stream APIs<br/>Real-time Connectors"]
+                IN4["📦 Batch Jobs<br/>Scheduled Extraction"]
+            end
+            
+            subgraph "🔄 Processing"
+                PR1["⚡ Apache Spark<br/>Distributed Processing"]
+                PR2["🌊 Apache Flink<br/>Stream Processing"]
+                PR3["🔧 dbt<br/>SQL Transformations"]
+                PR4["✅ Great Expectations<br/>Data Quality"]
+            end
+        end
+        
+        subgraph "💾 STORAGE LAYER"
+            ST1["🏞️ Data Lake<br/>S3/MinIO"]
+            ST2["🏢 Data Warehouse<br/>ClickHouse/PostgreSQL"]
+            ST3["🏪 Feature Store<br/>ML Features"]
+            ST4["⚡ Cache<br/>Redis/Memcached"]
+        end
+        
+        subgraph "🚀 SERVING LAYER"
+            SV1["🏢 Data Warehouse<br/>Analytics Queries"]
+            SV2["🏪 Feature Store<br/>ML Serving"]
+            SV3["🌐 APIs<br/>REST/GraphQL"]
+            SV4["⚡ Cache<br/>Fast Access"]
+        end
+        
+        subgraph "📱 APPLICATION LAYER"
+            AP1["📊 Dashboards<br/>Grafana/Tableau"]
+            AP2["🤖 ML Models<br/>Recommendations"]
+            AP3["📈 Reports<br/>Business Analytics"]
+            AP4["🚨 Alerts<br/>Monitoring"]
+        end
+    end
+    
+    subgraph "🏗️ INFRASTRUCTURE LAYER"
+        subgraph "☁️ Infrastructure"
+            IF1["🎯 Kubernetes<br/>Container Orchestration"]
+            IF2["🐳 Docker<br/>Containerization"]
+            IF3["🏗️ Terraform<br/>Infrastructure as Code"]
+            IF4["☁️ Cloud Services<br/>AWS/Azure/GCP"]
+        end
+        
+        subgraph "⚙️ Orchestration"
+            OR1["🔄 Apache Airflow<br/>DAG Management"]
+            OR2["🎯 Kubernetes<br/>Pod Scheduling"]
+            OR3["📋 Workflows<br/>CI/CD Pipelines"]
+            OR4["⏰ Schedulers<br/>Cron Jobs"]
+        end
+        
+        subgraph "📊 Monitoring"
+            MO1["📈 Prometheus<br/>Metrics Collection"]
+            MO2["📊 Grafana<br/>Visualization"]
+            MO3["📝 ELK Stack<br/>Log Management"]
+            MO4["🚨 AlertManager<br/>Notifications"]
+        end
+    end
+    
+    %% Data Flow
+    DS1 --> IN1
+    DS1 --> IN3
+    DS2 --> IN2
+    DS2 --> IN4
+    DS3 --> IN2
+    DS4 --> IN4
+    
+    IN1 --> PR2
+    IN2 --> PR1
+    IN3 --> PR2
+    IN4 --> PR1
+    
+    PR1 --> PR4
+    PR2 --> PR4
+    PR3 --> PR4
+    
+    PR1 --> ST1
+    PR1 --> ST2
+    PR2 --> ST3
+    PR4 --> ST1
+    
+    ST1 --> SV1
+    ST2 --> SV1
+    ST3 --> SV2
+    ST4 --> SV4
+    
+    SV1 --> AP1
+    SV1 --> AP3
+    SV2 --> AP2
+    SV3 --> AP1
+    SV4 --> AP4
+    
+    %% Infrastructure connections
+    IF1 --> OR2
+    IF3 --> IF1
+    OR1 --> PR1
+    OR1 --> PR2
+    
+    MO1 --> MO2
+    MO1 --> MO4
+    MO3 --> MO2
+
+    %% Styling
+    classDef sourceClass fill:#e3f2fd,stroke:#1976d2
+    classDef ingestionClass fill:#f3e5f5,stroke:#7b1fa2
+    classDef processClass fill:#e8f5e8,stroke:#388e3c
+    classDef storageClass fill:#fff3e0,stroke:#f57c00
+    classDef servingClass fill:#fce4ec,stroke:#c2185b
+    classDef appClass fill:#f1f8e9,stroke:#689f38
+    classDef infraClass fill:#ffebee,stroke:#d32f2f
+    classDef orchClass fill:#e8eaf6,stroke:#3f51b5
+    classDef monitorClass fill:#f3e5f5,stroke:#9c27b0
+
+    class DS1,DS2,DS3,DS4 sourceClass
+    class IN1,IN2,IN3,IN4 ingestionClass
+    class PR1,PR2,PR3,PR4 processClass
+    class ST1,ST2,ST3,ST4 storageClass
+    class SV1,SV2,SV3,SV4 servingClass
+    class AP1,AP2,AP3,AP4 appClass
+    class IF1,IF2,IF3,IF4 infraClass
+    class OR1,OR2,OR3,OR4 orchClass
+    class MO1,MO2,MO3,MO4 monitorClass
 ```
 
 ## 📊 Data Flow Architecture
@@ -51,29 +148,108 @@ The e-commerce data platform follows a modern, cloud-native architecture that su
 
 The platform implements a Lambda Architecture pattern to handle both batch and real-time processing:
 
+```mermaid
+graph TB
+    subgraph "📊 DATA SOURCES"
+        DS["🌐 Data Sources<br/>Web Events, Databases, APIs"]
+    end
+    
+    DS --> SL
+    DS --> BL
+    
+    subgraph "⚡ SPEED LAYER (Real-time)"
+        SL["🌊 Real-time Processing"]
+        SL1["⚡ Kafka Streams<br/>Event Processing"]
+        SL2["🌊 Apache Flink<br/>Stream Analytics"]
+        SL3["🔄 Real-time ETL<br/>Immediate Transform"]
+        
+        SL --> SL1
+        SL --> SL2
+        SL --> SL3
+    end
+    
+    subgraph "📦 BATCH LAYER (Historical)"
+        BL["🗄️ Batch Processing"]
+        BL1["⚡ Apache Spark<br/>Large-scale Processing"]
+        BL2["🔄 Apache Airflow<br/>Workflow Orchestration"]
+        BL3["🏞️ Data Lake<br/>Historical Storage"]
+        
+        BL --> BL1
+        BL --> BL2
+        BL --> BL3
+    end
+    
+    subgraph "🚀 SERVING LAYER"
+        SRV["📊 Unified View"]
+        SRV1["📈 Data Marts<br/>Aggregated Views"]
+        SRV2["🌐 APIs<br/>Data Access"]
+        SRV3["📊 Dashboards<br/>Visualization"]
+        SRV4["🤖 ML Models<br/>Predictions"]
+        
+        SRV --> SRV1
+        SRV --> SRV2
+        SRV --> SRV3
+        SRV --> SRV4
+    end
+    
+    %% Speed Layer to Serving
+    SL1 --> SRV
+    SL2 --> SRV
+    SL3 --> SRV
+    
+    %% Batch Layer to Serving
+    BL1 --> SRV
+    BL2 --> SRV
+    BL3 --> SRV
+
+    %% Styling
+    classDef sourceClass fill:#e3f2fd,stroke:#1976d2
+    classDef speedClass fill:#ffebee,stroke:#d32f2f
+    classDef batchClass fill:#e8f5e8,stroke:#388e3c
+    classDef servingClass fill:#fff3e0,stroke:#f57c00
+
+    class DS sourceClass
+    class SL,SL1,SL2,SL3 speedClass
+    class BL,BL1,BL2,BL3 batchClass
+    class SRV,SRV1,SRV2,SRV3,SRV4 servingClass
 ```
-┌─────────────────┐
-│   Data Sources  │
-└─────────┬───────┘
-          │
-          ▼
-┌─────────────────┐
-│  Speed Layer    │ ──┐
-│ (Real-time)     │   │
-│                 │   │    ┌─────────────────┐
-│ • Kafka Streams │   │    │  Serving Layer  │
-│ • Apache Flink  │   ├───▶│                 │
-│ • Real-time ETL │   │    │ • Data Marts    │
-└─────────────────┘   │    │ • APIs          │
-                      │    │ • Dashboards    │
-┌─────────────────┐   │    │ • ML Models     │
-│  Batch Layer    │   │    └─────────────────┘
-│ (Historical)    │   │
-│                 │   │
-│ • Apache Spark  │   │
-│ • Apache Airflow│ ──┘
-│ • Data Lake     │
-└─────────────────┘
+
+### Data Processing Patterns
+
+```mermaid
+graph LR
+    subgraph "🔄 Processing Patterns"
+        subgraph "⚡ Real-time Stream"
+            RT1["📱 User Click"] --> RT2["⚡ Kafka Topic"]
+            RT2 --> RT3["🌊 Flink Job"]
+            RT3 --> RT4["📊 Real-time Dashboard"]
+        end
+        
+        subgraph "📦 Batch Processing"
+            BT1["🗄️ Daily Snapshot"] --> BT2["🔄 Airflow DAG"]
+            BT2 --> BT3["⚡ Spark Job"]
+            BT3 --> BT4["🏢 Data Warehouse"]
+        end
+        
+        subgraph "🔄 Micro-batch"
+            MB1["📊 Mini Batches"] --> MB2["⚡ Spark Streaming"]
+            MB2 --> MB3["🏪 Feature Store"]
+        end
+    end
+    
+    RT4 --> UNIFIED["🎯 Unified Analytics"]
+    BT4 --> UNIFIED
+    MB3 --> UNIFIED
+    
+    classDef realtimeClass fill:#ffebee,stroke:#d32f2f
+    classDef batchClass fill:#e8f5e8,stroke:#388e3c
+    classDef microbatchClass fill:#e3f2fd,stroke:#1976d2
+    classDef unifiedClass fill:#fff3e0,stroke:#f57c00
+    
+    class RT1,RT2,RT3,RT4 realtimeClass
+    class BT1,BT2,BT3,BT4 batchClass
+    class MB1,MB2,MB3 microbatchClass
+    class UNIFIED unifiedClass
 ```
 
 ## 🏢 Component Architecture
@@ -210,49 +386,393 @@ suite.expect_column_values_to_be_between(
 
 ## 🏗️ Deployment Architecture
 
-### Local Development
-```
-Docker Compose Environment
-├── Application Services
-│   ├── Airflow (Webserver, Scheduler, Worker)
-│   ├── Spark (Master, Worker)
-│   ├── Jupyter Notebook
-│   └── Custom Applications
-├── Data Services
-│   ├── PostgreSQL
-│   ├── Kafka + Zookeeper
-│   ├── Redis
-│   └── MinIO
-└── Monitoring Services
-    ├── Prometheus
-    ├── Grafana
-    ├── Elasticsearch
-    └── Kibana
+### Local Development Environment
+
+```mermaid
+graph TB
+    subgraph "🐳 Docker Compose Environment"
+        subgraph "📱 Application Services"
+            AF1["🔄 Airflow Webserver"]
+            AF2["⏰ Airflow Scheduler"]
+            AF3["👷 Airflow Worker"]
+            SP1["⚡ Spark Master"]
+            SP2["👥 Spark Worker"]
+            JUP["📓 Jupyter Notebook"]
+            APP["🛠️ Custom Applications"]
+        end
+        
+        subgraph "💾 Data Services"
+            PG["🗄️ PostgreSQL<br/>Data Warehouse"]
+            KF["⚡ Kafka Broker"]
+            ZK["🐘 Zookeeper"]
+            RD["⚡ Redis Cache"]
+            MIO["📦 MinIO<br/>Object Storage"]
+        end
+        
+        subgraph "📊 Monitoring Services"
+            PROM["📈 Prometheus<br/>Metrics Collection"]
+            GRAF["📊 Grafana<br/>Dashboards"]
+            ES["🔍 Elasticsearch<br/>Search & Analytics"]
+            KIB["📊 Kibana<br/>Log Visualization"]
+        end
+    end
+    
+    %% Application connections
+    AF1 --> AF2
+    AF2 --> AF3
+    SP1 --> SP2
+    JUP --> SP1
+    APP --> PG
+    APP --> RD
+    
+    %% Data service connections
+    KF --> ZK
+    AF3 --> PG
+    AF3 --> MIO
+    SP2 --> PG
+    SP2 --> MIO
+    
+    %% Monitoring connections
+    PROM --> GRAF
+    ES --> KIB
+    AF1 --> PROM
+    SP1 --> PROM
+    APP --> ES
+
+    %% Styling
+    classDef appClass fill:#e3f2fd,stroke:#1976d2
+    classDef dataClass fill:#e8f5e8,stroke:#388e3c
+    classDef monitorClass fill:#fff3e0,stroke:#f57c00
+
+    class AF1,AF2,AF3,SP1,SP2,JUP,APP appClass
+    class PG,KF,ZK,RD,MIO dataClass
+    class PROM,GRAF,ES,KIB monitorClass
 ```
 
-### Cloud Production (AWS)
+### Cloud Production Architecture (AWS)
+
+```mermaid
+graph TB
+    subgraph "☁️ AWS Cloud Environment"
+        subgraph "🌐 VPC (10.0.0.0/16)"
+            subgraph "🌍 Public Subnets"
+                ALB["⚖️ Application Load Balancer"]
+                NAT["🌐 NAT Gateway"]
+            end
+            
+            subgraph "🔒 Private Subnets"
+                subgraph "🎯 EKS Cluster"
+                    AF_POD["🔄 Airflow Pods"]
+                    SP_POD["⚡ Spark Operators"]
+                    APP_POD["🛠️ Application Pods"]
+                    MON_POD["📊 Monitoring Stack"]
+                end
+                
+                subgraph "⚡ EMR Cluster"
+                    EMR_MASTER["🎯 EMR Master"]
+                    EMR_WORKER["👥 EMR Workers"]
+                end
+            end
+            
+            subgraph "💾 Data Subnets"
+                RDS["🗄️ RDS PostgreSQL<br/>Multi-AZ"]
+                REDIS["⚡ ElastiCache Redis<br/>Cluster"]
+            end
+        end
+        
+        subgraph "🗄️ Managed Services"
+            MSK["⚡ MSK (Managed Kafka)<br/>Multi-AZ"]
+            S3["📦 S3 Data Lake<br/>Multi-Region"]
+            LAMBDA["⚡ Lambda Functions<br/>Serverless"]
+        end
+        
+        subgraph "📊 Monitoring & Security"
+            CW["📊 CloudWatch<br/>Logs & Metrics"]
+            IAM["🔐 IAM Roles<br/>Access Control"]
+            VPC_FL["🔍 VPC Flow Logs"]
+        end
+    end
+    
+    subgraph "🌍 External"
+        USERS["👥 Users"]
+        ADMINS["👩‍💻 Administrators"]
+    end
+    
+    %% External connections
+    USERS --> ALB
+    ADMINS --> ALB
+    
+    %% Load balancer routing
+    ALB --> AF_POD
+    ALB --> APP_POD
+    ALB --> MON_POD
+    
+    %% Application connections
+    AF_POD --> RDS
+    AF_POD --> S3
+    SP_POD --> S3
+    APP_POD --> RDS
+    APP_POD --> REDIS
+    
+    %% EMR connections
+    EMR_MASTER --> EMR_WORKER
+    EMR_MASTER --> S3
+    
+    %% Managed service connections
+    AF_POD --> MSK
+    SP_POD --> MSK
+    LAMBDA --> S3
+    LAMBDA --> RDS
+    
+    %% Monitoring connections
+    AF_POD --> CW
+    SP_POD --> CW
+    EMR_MASTER --> CW
+    MON_POD --> CW
+    
+    %% Security connections
+    AF_POD -.-> IAM
+    SP_POD -.-> IAM
+    EMR_MASTER -.-> IAM
+
+    %% Styling
+    classDef awsClass fill:#ff9900,color:#fff
+    classDef computeClass fill:#4caf50,color:#fff
+    classDef dataClass fill:#2196f3,color:#fff
+    classDef monitorClass fill:#9c27b0,color:#fff
+    classDef userClass fill:#607d8b,color:#fff
+
+    class ALB,NAT,S3,CW,IAM,VPC_FL awsClass
+    class AF_POD,SP_POD,APP_POD,EMR_MASTER,EMR_WORKER,LAMBDA computeClass
+    class RDS,REDIS,MSK dataClass
+    class MON_POD monitorClass
+    class USERS,ADMINS userClass
 ```
-AWS Cloud Environment
-├── Compute
-│   ├── EKS Cluster (Applications)
-│   ├── EMR Cluster (Spark Jobs)
-│   └── Lambda Functions (Serverless)
-├── Data Services
-│   ├── RDS PostgreSQL
-│   ├── MSK (Managed Kafka)
-│   ├── ElastiCache Redis
-│   └── S3 (Data Lake)
-├── Networking
-│   ├── VPC with Private/Public Subnets
-│   ├── Application Load Balancer
-│   └── NAT Gateway
-└── Monitoring
-    ├── CloudWatch
-    ├── Prometheus on EKS
-    └── Grafana on EKS
+
+### Multi-Environment Deployment Strategy
+
+```mermaid
+graph LR
+    subgraph "🔄 CI/CD Pipeline"
+        GIT["📁 Git Repository"] --> BUILD["🔨 Build & Test"]
+        BUILD --> DEV_DEPLOY["🧪 Deploy to Dev"]
+        DEV_DEPLOY --> STAGING_DEPLOY["🎭 Deploy to Staging"]
+        STAGING_DEPLOY --> PROD_DEPLOY["🚀 Deploy to Production"]
+    end
+    
+    subgraph "🧪 Development"
+        DEV_ENV["🐳 Docker Compose<br/>Local Environment"]
+    end
+    
+    subgraph "🎭 Staging"
+        STAGING_ENV["☁️ AWS EKS<br/>Staging Cluster"]
+    end
+    
+    subgraph "🚀 Production"
+        PROD_ENV["☁️ AWS EKS<br/>Production Cluster<br/>Multi-AZ"]
+    end
+    
+    DEV_DEPLOY --> DEV_ENV
+    STAGING_DEPLOY --> STAGING_ENV
+    PROD_DEPLOY --> PROD_ENV
+    
+    classDef cicdClass fill:#e3f2fd,stroke:#1976d2
+    classDef devClass fill:#e8f5e8,stroke:#388e3c
+    classDef stagingClass fill:#fff3e0,stroke:#f57c00
+    classDef prodClass fill:#ffebee,stroke:#d32f2f
+    
+    class GIT,BUILD,DEV_DEPLOY,STAGING_DEPLOY,PROD_DEPLOY cicdClass
+    class DEV_ENV devClass
+    class STAGING_ENV stagingClass
+    class PROD_ENV prodClass
 ```
 
 ## 🔄 Data Pipeline Patterns
+
+### Data Pipeline Flow Overview
+
+```mermaid
+flowchart TD
+    subgraph "📊 Data Sources"
+        SRC1["🌐 Web Analytics<br/>User Events"]
+        SRC2["🗄️ OLTP Database<br/>Transactions"]
+        SRC3["🔗 External APIs<br/>Partners, Weather"]
+        SRC4["📄 File Systems<br/>Logs, Reports"]
+    end
+    
+    subgraph "📥 Ingestion & Validation"
+        KAFKA["⚡ Kafka Topics<br/>Real-time Events"]
+        AIRFLOW["🔄 Airflow DAGs<br/>Batch Extraction"]
+        VALIDATE["✅ Data Validation<br/>Schema & Quality"]
+        BUFFER["📦 Landing Zone<br/>Temporary Storage"]
+    end
+    
+    subgraph "🔄 Processing & Transformation"
+        STREAM["🌊 Stream Processing<br/>Flink Jobs"]
+        BATCH["⚡ Batch Processing<br/>Spark Jobs"]
+        DBT["🔧 dbt Models<br/>SQL Transformations"]
+        QUALITY["🔍 Quality Checks<br/>Great Expectations"]
+    end
+    
+    subgraph "💾 Storage Layers"
+        BRONZE["🥉 Bronze Layer<br/>Raw Data"]
+        SILVER["🥈 Silver Layer<br/>Cleaned Data"]
+        GOLD["🥇 Gold Layer<br/>Business Ready"]
+        FEATURE["🏪 Feature Store<br/>ML Features"]
+    end
+    
+    subgraph "🚀 Serving & Analytics"
+        DWH["🏢 Data Warehouse<br/>OLAP Queries"]
+        MART["📊 Data Marts<br/>Domain Specific"]
+        API["🌐 Data APIs<br/>REST/GraphQL"]
+        CACHE["⚡ Cache Layer<br/>Fast Access"]
+    end
+    
+    subgraph "📱 Applications"
+        BI["📊 BI Dashboards<br/>Tableau, Grafana"]
+        ML["🤖 ML Models<br/>Predictions"]
+        REPORTS["📈 Reports<br/>Automated"]
+        ALERTS["🚨 Alerts<br/>Monitoring"]
+    end
+    
+    %% Real-time path
+    SRC1 --> KAFKA
+    KAFKA --> STREAM
+    STREAM --> SILVER
+    
+    %% Batch path
+    SRC2 --> AIRFLOW
+    SRC3 --> AIRFLOW
+    SRC4 --> AIRFLOW
+    AIRFLOW --> VALIDATE
+    VALIDATE --> BUFFER
+    BUFFER --> BATCH
+    
+    %% Processing flow
+    BATCH --> BRONZE
+    BRONZE --> DBT
+    DBT --> QUALITY
+    QUALITY --> SILVER
+    SILVER --> GOLD
+    
+    %% Feature engineering
+    GOLD --> FEATURE
+    SILVER --> FEATURE
+    
+    %% Serving layer
+    GOLD --> DWH
+    DWH --> MART
+    FEATURE --> API
+    MART --> CACHE
+    
+    %% Application layer
+    DWH --> BI
+    MART --> BI
+    API --> ML
+    FEATURE --> ML
+    CACHE --> REPORTS
+    DWH --> ALERTS
+    
+    %% Feedback loops
+    QUALITY -.-> BRONZE
+    ALERTS -.-> VALIDATE
+
+    %% Styling
+    classDef sourceClass fill:#e3f2fd,stroke:#1976d2
+    classDef ingestionClass fill:#f3e5f5,stroke:#7b1fa2
+    classDef processClass fill:#e8f5e8,stroke:#388e3c
+    classDef storageClass fill:#fff3e0,stroke:#f57c00
+    classDef servingClass fill:#fce4ec,stroke:#c2185b
+    classDef appClass fill:#f1f8e9,stroke:#689f38
+
+    class SRC1,SRC2,SRC3,SRC4 sourceClass
+    class KAFKA,AIRFLOW,VALIDATE,BUFFER ingestionClass
+    class STREAM,BATCH,DBT,QUALITY processClass
+    class BRONZE,SILVER,GOLD,FEATURE storageClass
+    class DWH,MART,API,CACHE servingClass
+    class BI,ML,REPORTS,ALERTS appClass
+```
+
+### Real-time vs Batch Processing
+
+```mermaid
+graph TB
+    subgraph "⚡ Real-time Processing (Hot Path)"
+        RT_SOURCE["📱 User Events<br/>Clicks, Views, Purchases"]
+        RT_KAFKA["⚡ Kafka Streams<br/>Event Buffer"]
+        RT_FLINK["🌊 Flink Processing<br/>Windowed Aggregations"]
+        RT_CACHE["⚡ Redis Cache<br/>Live Metrics"]
+        RT_DASHBOARD["📊 Real-time Dashboard<br/>Live Analytics"]
+        
+        RT_SOURCE --> RT_KAFKA
+        RT_KAFKA --> RT_FLINK
+        RT_FLINK --> RT_CACHE
+        RT_CACHE --> RT_DASHBOARD
+    end
+    
+    subgraph "📦 Batch Processing (Cold Path)"
+        BT_SOURCE["🗄️ Database Snapshots<br/>Daily Extracts"]
+        BT_AIRFLOW["🔄 Airflow Scheduler<br/>ETL Orchestration"]
+        BT_SPARK["⚡ Spark Jobs<br/>Large-scale Processing"]
+        BT_DWH["🏢 Data Warehouse<br/>Historical Analysis"]
+        BT_REPORTS["📈 Reports<br/>Business Intelligence"]
+        
+        BT_SOURCE --> BT_AIRFLOW
+        BT_AIRFLOW --> BT_SPARK
+        BT_SPARK --> BT_DWH
+        BT_DWH --> BT_REPORTS
+    end
+    
+    subgraph "🔄 Lambda Architecture Merge"
+        MERGE["🎯 Unified View<br/>Real-time + Historical"]
+        SERVING["🚀 Serving Layer<br/>APIs & Analytics"]
+    end
+    
+    RT_CACHE --> MERGE
+    BT_DWH --> MERGE
+    MERGE --> SERVING
+
+    %% Styling
+    classDef realtimeClass fill:#ffebee,stroke:#d32f2f
+    classDef batchClass fill:#e8f5e8,stroke:#388e3c
+    classDef mergeClass fill:#e3f2fd,stroke:#1976d2
+
+    class RT_SOURCE,RT_KAFKA,RT_FLINK,RT_CACHE,RT_DASHBOARD realtimeClass
+    class BT_SOURCE,BT_AIRFLOW,BT_SPARK,BT_DWH,BT_REPORTS batchClass
+    class MERGE,SERVING mergeClass
+```
+
+### Data Quality Pipeline
+
+```mermaid
+sequenceDiagram
+    participant Source as 📊 Data Source
+    participant Ingestion as 📥 Ingestion
+    participant Validation as ✅ Validation
+    participant Processing as 🔄 Processing
+    participant Quality as 🔍 Quality Check
+    participant Storage as 💾 Storage
+    participant Alert as 🚨 Alert System
+
+    Source->>Ingestion: Raw data
+    Ingestion->>Validation: Schema validation
+    
+    alt Schema Valid
+        Validation->>Processing: Clean data
+        Processing->>Quality: Transformed data
+        
+        alt Quality Check Pass
+            Quality->>Storage: Store data
+            Storage-->>Alert: Success notification
+        else Quality Check Fail
+            Quality->>Alert: Quality failure
+            Alert->>Processing: Retry with fixes
+        end
+    else Schema Invalid
+        Validation->>Alert: Schema error
+        Alert->>Source: Data source issue
+    end
+```
 
 ### 1. Batch ETL Pipeline
 ```python
