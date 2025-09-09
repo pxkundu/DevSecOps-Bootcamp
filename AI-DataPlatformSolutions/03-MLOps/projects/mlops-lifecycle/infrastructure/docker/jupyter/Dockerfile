@@ -47,8 +47,8 @@ RUN mkdir -p /home/jovyan/work/notebooks \
     && mkdir -p /home/jovyan/work/feature-engineering \
     && mkdir -p /home/jovyan/work/training
 
-# Copy custom Jupyter configuration
-COPY infrastructure/docker/jupyter/jupyter_lab_config.py /home/jovyan/.jupyter/ || true
+# Copy custom Jupyter configuration if it exists
+COPY --chown=jovyan:users infrastructure/docker/jupyter/jupyter_lab_config.p* /home/jovyan/.jupyter/
 
 WORKDIR /home/jovyan/work
 
