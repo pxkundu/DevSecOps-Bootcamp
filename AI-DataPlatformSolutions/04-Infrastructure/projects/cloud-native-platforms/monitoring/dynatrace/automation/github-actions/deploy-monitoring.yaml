@@ -1,0 +1,231 @@
+name: Deploy Dynatrace Monitoring
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'monitoring/dynatrace/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'monitoring/dynatrace/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+      deploy_terraform:
+        description: 'Deploy Terraform infrastructure'
+        required: true
+        default: true
+        type: boolean
+      deploy_dashboards:
+        description: 'Deploy dashboards'
+        required: true
+        default: true
+        type: boolean
+      deploy_alerting:
+        description: 'Deploy alerting'
+        required: true
+        default: true
+        type: boolean
+
+env:
+  AWS_REGION: us-east-1
+  TERRAFORM_VERSION: '1.6.0'
+
+jobs:
+  validate:
+    name: Validate Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Format Check
+        working-directory: monitoring/dynatrace/infrastructure/terraform
+        run: terraform fmt -check -recursive
+
+      - name: Validate JSON files
+        run: |
+          for file in monitoring/dynatrace/**/*.json; do
+            echo "Validating: $file"
+            jq . "$file" > /dev/null
+          done
+
+      - name: Validate YAML files
+        run: |
+          pip install pyyaml
+          for file in monitoring/dynatrace/**/*.yaml monitoring/dynatrace/**/*.yml; do
+            if [[ -f "$file" ]]; then
+              echo "Validating: $file"
+              python -c "import yaml; yaml.safe_load(open('$file'))"
+            fi
+          done
+
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'pull_request'
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        working-directory: monitoring/dynatrace/infrastructure/terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: monitoring/dynatrace/infrastructure/terraform
+        env:
+          TF_VAR_dynatrace_tenant_url: ${{ secrets.DT_TENANT_URL }}
+          TF_VAR_dynatrace_api_token: ${{ secrets.DT_API_TOKEN }}
+          TF_VAR_dynatrace_paas_token: ${{ secrets.DT_PAAS_TOKEN }}
+          TF_VAR_dynatrace_external_id: ${{ secrets.DT_EXTERNAL_ID }}
+          TF_VAR_dynatrace_tenant_id: ${{ secrets.DT_TENANT_ID }}
+        run: |
+          terraform plan \
+            -var-file="environments/${{ github.event.inputs.environment || 'production' }}/terraform.tfvars" \
+            -out=tfplan
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: monitoring/dynatrace/infrastructure/terraform/tfplan
+
+  deploy-infrastructure:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && github.event.inputs.deploy_terraform != 'false'
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        working-directory: monitoring/dynatrace/infrastructure/terraform
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: monitoring/dynatrace/infrastructure/terraform
+        env:
+          TF_VAR_dynatrace_tenant_url: ${{ secrets.DT_TENANT_URL }}
+          TF_VAR_dynatrace_api_token: ${{ secrets.DT_API_TOKEN }}
+          TF_VAR_dynatrace_paas_token: ${{ secrets.DT_PAAS_TOKEN }}
+          TF_VAR_dynatrace_external_id: ${{ secrets.DT_EXTERNAL_ID }}
+          TF_VAR_dynatrace_tenant_id: ${{ secrets.DT_TENANT_ID }}
+        run: |
+          terraform apply \
+            -auto-approve \
+            -var-file="environments/${{ github.event.inputs.environment || 'production' }}/terraform.tfvars"
+
+  deploy-dashboards:
+    name: Deploy Dashboards
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    if: always() && (needs.deploy-infrastructure.result == 'success' || needs.deploy-infrastructure.result == 'skipped') && github.event.inputs.deploy_dashboards != 'false'
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy Dashboards
+        env:
+          DT_TENANT_URL: ${{ secrets.DT_TENANT_URL }}
+          DT_API_TOKEN: ${{ secrets.DT_API_TOKEN }}
+        run: |
+          for dashboard in monitoring/dynatrace/dashboards/*.json; do
+            if [[ -f "$dashboard" ]]; then
+              echo "Deploying: $dashboard"
+              curl -s -X POST "${DT_TENANT_URL}/api/config/v1/dashboards" \
+                -H "Authorization: Api-Token ${DT_API_TOKEN}" \
+                -H "Content-Type: application/json" \
+                -d @"$dashboard"
+            fi
+          done
+
+  deploy-alerting:
+    name: Deploy Alerting
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    if: always() && (needs.deploy-infrastructure.result == 'success' || needs.deploy-infrastructure.result == 'skipped') && github.event.inputs.deploy_alerting != 'false'
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy Alerting Profiles
+        env:
+          DT_TENANT_URL: ${{ secrets.DT_TENANT_URL }}
+          DT_API_TOKEN: ${{ secrets.DT_API_TOKEN }}
+        run: |
+          if [[ -f "monitoring/dynatrace/configuration/dynatrace-api/alerting-profiles.json" ]]; then
+            jq -c '.alertingProfiles[]' monitoring/dynatrace/configuration/dynatrace-api/alerting-profiles.json | while read -r profile; do
+              echo "Deploying alerting profile..."
+              curl -s -X POST "${DT_TENANT_URL}/api/config/v1/alertingProfiles" \
+                -H "Authorization: Api-Token ${DT_API_TOKEN}" \
+                -H "Content-Type: application/json" \
+                -d "$profile"
+            done
+          fi
+
+  validate-deployment:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-dashboards, deploy-alerting]
+    if: always()
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Validation
+        env:
+          DT_TENANT_URL: ${{ secrets.DT_TENANT_URL }}
+          DT_API_TOKEN: ${{ secrets.DT_API_TOKEN }}
+          DT_PAAS_TOKEN: ${{ secrets.DT_PAAS_TOKEN }}
+        run: |
+          chmod +x monitoring/dynatrace/automation/scripts/validate-setup.sh
+          ./monitoring/dynatrace/automation/scripts/validate-setup.sh
+

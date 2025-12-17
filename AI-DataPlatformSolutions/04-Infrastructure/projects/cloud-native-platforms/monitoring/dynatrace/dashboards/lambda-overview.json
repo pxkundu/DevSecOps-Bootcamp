@@ -1,0 +1,416 @@
+{
+  "metadata": {
+    "configurationVersions": [7],
+    "clusterVersion": "1.285.0"
+  },
+  "dashboardMetadata": {
+    "name": "AWS Lambda - Serverless Overview",
+    "shared": true,
+    "owner": "platform-team",
+    "dashboardFilter": {
+      "timeframe": "-2h",
+      "managementZone": null
+    },
+    "tags": ["aws", "lambda", "serverless", "monitoring"],
+    "preset": false
+  },
+  "tiles": [
+    {
+      "name": "Dashboard Header",
+      "tileType": "MARKDOWN",
+      "configured": true,
+      "bounds": {
+        "top": 0,
+        "left": 0,
+        "width": 1520,
+        "height": 76
+      },
+      "markdown": "## 🚀 AWS Lambda Serverless Monitoring\n\n**Purpose**: Monitor Lambda function performance, errors, and cold starts | **Contact**: Platform Team | [Runbook](https://wiki.example.com/lambda-runbook)"
+    },
+    {
+      "name": "Total Invocations",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 76,
+        "left": 0,
+        "width": 304,
+        "height": 152
+      },
+      "customName": "Total Invocations",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "SUM",
+          "timeAggregation": "DEFAULT",
+          "splitBy": [],
+          "metricSelector": "builtin:cloud.aws.lambda.invocations:splitBy():sum",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "global": {
+          "hideLegend": true
+        },
+        "thresholds": [
+          {
+            "axisTarget": "LEFT",
+            "rules": [
+              { "color": "#7dc540" }
+            ],
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "Error Rate",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 76,
+        "left": 304,
+        "width": 304,
+        "height": 152
+      },
+      "customName": "Error Rate %",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "AUTO",
+          "timeAggregation": "DEFAULT",
+          "splitBy": [],
+          "metricSelector": "(builtin:cloud.aws.lambda.errors:splitBy():sum / builtin:cloud.aws.lambda.invocations:splitBy():sum) * 100",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "global": {
+          "hideLegend": true
+        },
+        "thresholds": [
+          {
+            "axisTarget": "LEFT",
+            "rules": [
+              { "value": 0, "color": "#7dc540" },
+              { "value": 1, "color": "#f5d30f" },
+              { "value": 5, "color": "#dc172a" }
+            ],
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "Cold Start Rate",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 76,
+        "left": 608,
+        "width": 304,
+        "height": 152
+      },
+      "customName": "Cold Start Rate %",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "AUTO",
+          "timeAggregation": "DEFAULT",
+          "splitBy": [],
+          "metricSelector": "(builtin:cloud.aws.lambda.coldStarts:splitBy():sum / builtin:cloud.aws.lambda.invocations:splitBy():sum) * 100",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "global": {
+          "hideLegend": true
+        },
+        "thresholds": [
+          {
+            "axisTarget": "LEFT",
+            "rules": [
+              { "value": 0, "color": "#7dc540" },
+              { "value": 20, "color": "#f5d30f" },
+              { "value": 50, "color": "#dc172a" }
+            ],
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "Average Duration",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 76,
+        "left": 912,
+        "width": 304,
+        "height": 152
+      },
+      "customName": "Avg Duration (ms)",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "AVG",
+          "timeAggregation": "DEFAULT",
+          "splitBy": [],
+          "metricSelector": "builtin:cloud.aws.lambda.duration:splitBy():avg",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "global": {
+          "hideLegend": true
+        },
+        "thresholds": [
+          {
+            "axisTarget": "LEFT",
+            "rules": [
+              { "value": 0, "color": "#7dc540" },
+              { "value": 1000, "color": "#f5d30f" },
+              { "value": 5000, "color": "#dc172a" }
+            ],
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "Throttled",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 76,
+        "left": 1216,
+        "width": 304,
+        "height": 152
+      },
+      "customName": "Throttled Invocations",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "SUM",
+          "timeAggregation": "DEFAULT",
+          "splitBy": [],
+          "metricSelector": "builtin:cloud.aws.lambda.throttles:splitBy():sum",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "global": {
+          "hideLegend": true
+        },
+        "thresholds": [
+          {
+            "axisTarget": "LEFT",
+            "rules": [
+              { "value": 0, "color": "#7dc540" },
+              { "value": 1, "color": "#f5d30f" },
+              { "value": 10, "color": "#dc172a" }
+            ],
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "Invocations Over Time",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 228,
+        "left": 0,
+        "width": 760,
+        "height": 304
+      },
+      "customName": "Invocations Over Time",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "SUM",
+          "timeAggregation": "DEFAULT",
+          "splitBy": ["dt.entity.aws_lambda_function"],
+          "metricSelector": "builtin:cloud.aws.lambda.invocations:splitBy(\"dt.entity.aws_lambda_function\"):sum:auto:sort(value(sum,descending)):limit(10)",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "GRAPH_CHART",
+        "global": {
+          "hideLegend": false
+        },
+        "axes": {
+          "xAxis": { "visible": true },
+          "yAxes": [{ "visible": true, "min": "AUTO", "max": "AUTO" }]
+        }
+      }
+    },
+    {
+      "name": "Error Rate Over Time",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 228,
+        "left": 760,
+        "width": 760,
+        "height": 304
+      },
+      "customName": "Error Rate Over Time",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "AUTO",
+          "timeAggregation": "DEFAULT",
+          "splitBy": ["dt.entity.aws_lambda_function"],
+          "metricSelector": "(builtin:cloud.aws.lambda.errors:splitBy(\"dt.entity.aws_lambda_function\"):sum / builtin:cloud.aws.lambda.invocations:splitBy(\"dt.entity.aws_lambda_function\"):sum) * 100:auto:sort(value(avg,descending)):limit(10)",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "GRAPH_CHART",
+        "global": {
+          "hideLegend": false
+        },
+        "axes": {
+          "xAxis": { "visible": true },
+          "yAxes": [{ "visible": true, "min": "AUTO", "max": "AUTO", "label": "Error %" }]
+        }
+      }
+    },
+    {
+      "name": "Duration by Function",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 532,
+        "left": 0,
+        "width": 760,
+        "height": 304
+      },
+      "customName": "Duration P95 by Function",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "AUTO",
+          "timeAggregation": "DEFAULT",
+          "splitBy": ["dt.entity.aws_lambda_function"],
+          "metricSelector": "builtin:cloud.aws.lambda.duration:splitBy(\"dt.entity.aws_lambda_function\"):percentile(95):auto:sort(value(avg,descending)):limit(10)",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "GRAPH_CHART",
+        "global": {
+          "hideLegend": false
+        },
+        "axes": {
+          "xAxis": { "visible": true },
+          "yAxes": [{ "visible": true, "min": "AUTO", "max": "AUTO", "label": "Duration (ms)" }]
+        }
+      }
+    },
+    {
+      "name": "Cold Starts Over Time",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 532,
+        "left": 760,
+        "width": 760,
+        "height": 304
+      },
+      "customName": "Cold Starts Over Time",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "SUM",
+          "timeAggregation": "DEFAULT",
+          "splitBy": ["dt.entity.aws_lambda_function"],
+          "metricSelector": "builtin:cloud.aws.lambda.coldStarts:splitBy(\"dt.entity.aws_lambda_function\"):sum:auto:sort(value(sum,descending)):limit(10)",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "GRAPH_CHART",
+        "global": {
+          "hideLegend": false
+        }
+      }
+    },
+    {
+      "name": "Top Functions by Invocations",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 836,
+        "left": 0,
+        "width": 760,
+        "height": 304
+      },
+      "customName": "Top 10 Functions by Invocations",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "SUM",
+          "timeAggregation": "DEFAULT",
+          "splitBy": ["dt.entity.aws_lambda_function"],
+          "metricSelector": "builtin:cloud.aws.lambda.invocations:splitBy(\"dt.entity.aws_lambda_function\"):sum:auto:sort(value(sum,descending)):limit(10)",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "TOP_LIST",
+        "global": {
+          "hideLegend": true
+        }
+      }
+    },
+    {
+      "name": "Top Functions by Errors",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {
+        "top": 836,
+        "left": 760,
+        "width": 760,
+        "height": 304
+      },
+      "customName": "Top 10 Functions by Errors",
+      "queries": [
+        {
+          "id": "A",
+          "spaceAggregation": "SUM",
+          "timeAggregation": "DEFAULT",
+          "splitBy": ["dt.entity.aws_lambda_function"],
+          "metricSelector": "builtin:cloud.aws.lambda.errors:splitBy(\"dt.entity.aws_lambda_function\"):sum:auto:sort(value(sum,descending)):limit(10)",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "TOP_LIST",
+        "global": {
+          "hideLegend": true
+        },
+        "thresholds": [
+          {
+            "axisTarget": "LEFT",
+            "rules": [
+              { "value": 0, "color": "#7dc540" },
+              { "value": 10, "color": "#f5d30f" },
+              { "value": 100, "color": "#dc172a" }
+            ],
+            "visible": true
+          }
+        ]
+      }
+    }
+  ]
+}
+

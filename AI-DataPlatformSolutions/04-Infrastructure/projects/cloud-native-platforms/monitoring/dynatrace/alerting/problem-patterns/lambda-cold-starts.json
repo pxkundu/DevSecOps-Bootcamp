@@ -1,0 +1,44 @@
+{
+  "name": "Lambda High Cold Start Rate",
+  "description": "Alert when Lambda cold start rate exceeds threshold, indicating potential performance issues",
+  "type": "METRIC",
+  "enabled": true,
+  "metricSelector": "(builtin:cloud.aws.lambda.coldStarts:splitBy(\"dt.entity.aws_lambda_function\"):sum / builtin:cloud.aws.lambda.invocations:splitBy(\"dt.entity.aws_lambda_function\"):sum) * 100",
+  "severity": "PERFORMANCE",
+  "alertCondition": "ABOVE",
+  "primaryDimensionKey": "dt.entity.aws_lambda_function",
+  "alertingScope": [
+    {
+      "filterType": "MANAGEMENT_ZONE",
+      "managementZone": {
+        "name": "AWS Serverless - Production"
+      }
+    }
+  ],
+  "monitoringStrategy": {
+    "type": "STATIC_THRESHOLD",
+    "alertCondition": "ABOVE",
+    "samples": 5,
+    "violatingSamples": 3,
+    "dealertingSamples": 5,
+    "threshold": 50,
+    "unit": "PERCENT"
+  },
+  "eventTemplate": {
+    "title": "High Cold Start Rate: {dims:dt.entity.aws_lambda_function}",
+    "description": "Lambda function {dims:dt.entity.aws_lambda_function} has a cold start rate of {alert_condition_value}%, exceeding the {threshold}% threshold.\n\nConsider:\n- Enabling provisioned concurrency\n- Reducing package size\n- Optimizing initialization code\n\nFunction: {dims:dt.entity.aws_lambda_function}",
+    "eventType": "CUSTOM_ALERT",
+    "davisMerge": true,
+    "metadata": [
+      {
+        "key": "alert.type",
+        "value": "cold-start"
+      },
+      {
+        "key": "service",
+        "value": "lambda"
+      }
+    ]
+  }
+}
+

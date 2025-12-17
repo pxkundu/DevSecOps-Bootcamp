@@ -1,0 +1,249 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Dynatrace AWS Monitoring IAM Role - Creates the necessary IAM role for Dynatrace to access AWS CloudWatch metrics and resource information.'
+
+# =============================================================================
+# Parameters
+# =============================================================================
+Parameters:
+  ExternalId:
+    Type: String
+    Description: 'External ID for secure cross-account access (get from Dynatrace AWS integration setup)'
+    MinLength: 1
+    NoEcho: true
+
+  Environment:
+    Type: String
+    Description: 'Deployment environment'
+    Default: 'production'
+    AllowedValues:
+      - dev
+      - staging
+      - production
+
+  DynatraceAWSAccountId:
+    Type: String
+    Description: 'Dynatrace AWS Account ID for trust relationship'
+    Default: '509560245411'
+
+  EnableS3Monitoring:
+    Type: String
+    Description: 'Enable S3 bucket monitoring (can increase metrics volume)'
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+# =============================================================================
+# Conditions
+# =============================================================================
+Conditions:
+  EnableS3: !Equals [!Ref EnableS3Monitoring, 'true']
+
+# =============================================================================
+# Resources
+# =============================================================================
+Resources:
+  # ---------------------------------------------------------------------------
+  # IAM Role for Dynatrace
+  # ---------------------------------------------------------------------------
+  DynatraceMonitoringRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub 'dynatrace-monitoring-role-${Environment}'
+      Description: 'IAM role allowing Dynatrace to access AWS monitoring data'
+      MaxSessionDuration: 3600
+      
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${DynatraceAWSAccountId}:root'
+            Action: 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref ExternalId
+      
+      Tags:
+        - Key: Name
+          Value: !Sub 'dynatrace-monitoring-role-${Environment}'
+        - Key: Project
+          Value: dynatrace-monitoring
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: cloudformation
+
+  # ---------------------------------------------------------------------------
+  # CloudWatch Metrics Policy
+  # ---------------------------------------------------------------------------
+  DynatraceCloudWatchPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 'dynatrace-cloudwatch-policy-${Environment}'
+      Description: 'Policy for Dynatrace to read CloudWatch metrics'
+      Roles:
+        - !Ref DynatraceMonitoringRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: CloudWatchMetricsAccess
+            Effect: Allow
+            Action:
+              - 'cloudwatch:GetMetricStatistics'
+              - 'cloudwatch:ListMetrics'
+              - 'cloudwatch:GetMetricData'
+              - 'cloudwatch:DescribeAlarms'
+            Resource: '*'
+          
+          - Sid: CloudWatchLogsAccess
+            Effect: Allow
+            Action:
+              - 'logs:DescribeLogGroups'
+              - 'logs:DescribeLogStreams'
+            Resource: '*'
+
+  # ---------------------------------------------------------------------------
+  # Resource Discovery Policy
+  # ---------------------------------------------------------------------------
+  DynatraceResourceDiscoveryPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 'dynatrace-resource-discovery-policy-${Environment}'
+      Description: 'Policy for Dynatrace to discover AWS resources'
+      Roles:
+        - !Ref DynatraceMonitoringRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: TagDiscovery
+            Effect: Allow
+            Action:
+              - 'tag:GetResources'
+              - 'tag:GetTagKeys'
+              - 'tag:GetTagValues'
+            Resource: '*'
+          
+          - Sid: LambdaDiscovery
+            Effect: Allow
+            Action:
+              - 'lambda:ListFunctions'
+              - 'lambda:ListTags'
+              - 'lambda:GetFunctionConfiguration'
+              - 'lambda:ListEventSourceMappings'
+            Resource: '*'
+          
+          - Sid: DynamoDBDiscovery
+            Effect: Allow
+            Action:
+              - 'dynamodb:ListTables'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:ListTagsOfResource'
+              - 'dynamodb:DescribeContributorInsights'
+            Resource: '*'
+          
+          - Sid: SQSDiscovery
+            Effect: Allow
+            Action:
+              - 'sqs:ListQueues'
+              - 'sqs:GetQueueAttributes'
+              - 'sqs:ListQueueTags'
+            Resource: '*'
+          
+          - Sid: SNSDiscovery
+            Effect: Allow
+            Action:
+              - 'sns:ListTopics'
+              - 'sns:GetTopicAttributes'
+              - 'sns:ListTagsForResource'
+              - 'sns:ListSubscriptionsByTopic'
+            Resource: '*'
+          
+          - Sid: APIGatewayDiscovery
+            Effect: Allow
+            Action:
+              - 'apigateway:GET'
+            Resource: 'arn:aws:apigateway:*::/*'
+          
+          - Sid: StepFunctionsDiscovery
+            Effect: Allow
+            Action:
+              - 'states:ListStateMachines'
+              - 'states:DescribeStateMachine'
+              - 'states:ListTagsForResource'
+            Resource: '*'
+          
+          - Sid: EventBridgeDiscovery
+            Effect: Allow
+            Action:
+              - 'events:ListRules'
+              - 'events:DescribeRule'
+              - 'events:ListTargetsByRule'
+            Resource: '*'
+          
+          - Sid: KinesisDiscovery
+            Effect: Allow
+            Action:
+              - 'kinesis:ListStreams'
+              - 'kinesis:DescribeStream'
+              - 'kinesis:ListTagsForStream'
+            Resource: '*'
+
+  # ---------------------------------------------------------------------------
+  # S3 Monitoring Policy (Optional)
+  # ---------------------------------------------------------------------------
+  DynatraceS3Policy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Condition: EnableS3
+    Properties:
+      ManagedPolicyName: !Sub 'dynatrace-s3-policy-${Environment}'
+      Description: 'Policy for Dynatrace to monitor S3 buckets'
+      Roles:
+        - !Ref DynatraceMonitoringRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: S3Discovery
+            Effect: Allow
+            Action:
+              - 's3:ListAllMyBuckets'
+              - 's3:GetBucketLocation'
+              - 's3:GetBucketTagging'
+              - 's3:GetBucketLogging'
+              - 's3:GetBucketVersioning'
+            Resource: '*'
+
+# =============================================================================
+# Outputs
+# =============================================================================
+Outputs:
+  RoleArn:
+    Description: 'ARN of the Dynatrace monitoring IAM role'
+    Value: !GetAtt DynatraceMonitoringRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-RoleArn'
+
+  RoleName:
+    Description: 'Name of the Dynatrace monitoring IAM role'
+    Value: !Ref DynatraceMonitoringRole
+    Export:
+      Name: !Sub '${AWS::StackName}-RoleName'
+
+  ExternalIdParameter:
+    Description: 'External ID used for the trust relationship'
+    Value: '***CONFIGURED***'
+
+  AWSAccountId:
+    Description: 'AWS Account ID where the role is deployed'
+    Value: !Ref 'AWS::AccountId'
+    Export:
+      Name: !Sub '${AWS::StackName}-AccountId'
+
+  DynatraceIntegrationConfig:
+    Description: 'Configuration values for Dynatrace AWS integration'
+    Value: !Sub |
+      IAM Role ARN: ${DynatraceMonitoringRole.Arn}
+      AWS Account ID: ${AWS::AccountId}
+      External ID: (Use the value provided during stack creation)
+      Region: ${AWS::Region}
+

@@ -1,0 +1,142 @@
+{
+  "alertingProfiles": [
+    {
+      "displayName": "AWS Serverless - Critical",
+      "mzId": null,
+      "rules": [
+        {
+          "severityLevel": "AVAILABILITY",
+          "tagFilter": {
+            "includeMode": "INCLUDE_ANY",
+            "tagFilters": [
+              {
+                "context": "CONTEXTLESS",
+                "key": "criticality",
+                "value": "high"
+              },
+              {
+                "context": "CONTEXTLESS",
+                "key": "tier",
+                "value": "1"
+              }
+            ]
+          },
+          "delayInMinutes": 0
+        },
+        {
+          "severityLevel": "ERROR",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 5
+        },
+        {
+          "severityLevel": "SLOWDOWN",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 15
+        },
+        {
+          "severityLevel": "RESOURCE_CONTENTION",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 30
+        },
+        {
+          "severityLevel": "CUSTOM_ALERT",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 0
+        }
+      ],
+      "eventTypeFilters": [
+        {
+          "predefinedEventFilter": {
+            "eventType": "CUSTOM_DEPLOYMENT",
+            "negate": false
+          }
+        },
+        {
+          "predefinedEventFilter": {
+            "eventType": "CUSTOM_CONFIGURATION",
+            "negate": false
+          }
+        }
+      ]
+    },
+    {
+      "displayName": "AWS Serverless - Standard",
+      "mzId": null,
+      "rules": [
+        {
+          "severityLevel": "AVAILABILITY",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 5
+        },
+        {
+          "severityLevel": "ERROR",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 15
+        },
+        {
+          "severityLevel": "SLOWDOWN",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 30
+        },
+        {
+          "severityLevel": "RESOURCE_CONTENTION",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 60
+        },
+        {
+          "severityLevel": "CUSTOM_ALERT",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 5
+        }
+      ],
+      "eventTypeFilters": []
+    },
+    {
+      "displayName": "AWS Serverless - Development (Low Priority)",
+      "mzId": null,
+      "rules": [
+        {
+          "severityLevel": "AVAILABILITY",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 30
+        },
+        {
+          "severityLevel": "ERROR",
+          "tagFilter": {
+            "includeMode": "NONE"
+          },
+          "delayInMinutes": 60
+        }
+      ],
+      "eventTypeFilters": [
+        {
+          "predefinedEventFilter": {
+            "eventType": "CUSTOM_ALERT",
+            "negate": true
+          }
+        }
+      ]
+    }
+  ]
+}
+

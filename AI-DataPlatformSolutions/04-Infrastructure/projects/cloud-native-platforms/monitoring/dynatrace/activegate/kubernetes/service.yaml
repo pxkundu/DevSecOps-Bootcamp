@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dynatrace-activegate
+  namespace: dynatrace
+  labels:
+    app: dynatrace-activegate
+    app.kubernetes.io/name: activegate
+    app.kubernetes.io/component: monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: dynatrace-activegate
+  ports:
+    - name: https
+      port: 443
+      targetPort: 9999
+      protocol: TCP
+    - name: ag-port
+      port: 9999
+      targetPort: 9999
+      protocol: TCP
+
+---
+# Internal Load Balancer for VPC access (optional)
+apiVersion: v1
+kind: Service
+metadata:
+  name: dynatrace-activegate-internal
+  namespace: dynatrace
+  labels:
+    app: dynatrace-activegate
+  annotations:
+    # AWS Internal NLB
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: dynatrace-activegate
+  ports:
+    - name: https
+      port: 443
+      targetPort: 9999
+      protocol: TCP
+

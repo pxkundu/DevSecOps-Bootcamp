@@ -1,0 +1,11 @@
+{
+  "type": "SLACK",
+  "name": "AWS Serverless Alerts - Slack",
+  "active": true,
+  "alertingProfile": "REPLACE_WITH_ALERTING_PROFILE_ID",
+  "channel": "#serverless-alerts",
+  "url": "REPLACE_WITH_SLACK_WEBHOOK_URL",
+  "title": "{ProblemSeverity}: {ProblemTitle}",
+  "message": "*Problem Details*\n\n• *Impact*: {ProblemImpact}\n• *Status*: {State}\n• *Problem ID*: {ProblemID}\n• *Root Cause*: {RootCauseEntity}\n\n*Affected Services*:\n{ImpactedEntities}\n\n*Tags*: {Tags}\n\n<{ProblemURL}|View in Dynatrace>"
+}
+

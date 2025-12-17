@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dynatrace-activegate-config
+  namespace: dynatrace
+  labels:
+    app: dynatrace-activegate
+    app.kubernetes.io/name: activegate
+data:
+  # Dynatrace tenant URL
+  tenant-url: "https://REPLACE_WITH_TENANT_ID.live.dynatrace.com"
+  
+  # ActiveGate group for identification
+  activegate-group: "aws-serverless-k8s"
+  
+  # Network zone (optional)
+  network-zone: "aws-us-east-1"
+  
+  # Enabled capabilities
+  capabilities: "aws_monitoring,log_analytics,synthetic"
+
+---
+# Secret for credentials (create separately or via external secrets operator)
+# kubectl create secret generic dynatrace-credentials \
+#   --namespace dynatrace \
+#   --from-literal=paas-token="dt0c01.XXX.YYY"
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dynatrace-credentials
+  namespace: dynatrace
+  labels:
+    app: dynatrace-activegate
+type: Opaque
+data:
+  # Base64 encoded PaaS token
+  # echo -n "dt0c01.XXX.YYY" | base64
+  paas-token: "UkVQTEFDRV9XSVRIX0JBU0U2NF9FTkNPREVEX1RPS0VO"
+

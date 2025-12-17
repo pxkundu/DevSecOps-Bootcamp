@@ -1,0 +1,90 @@
+version: '3.8'
+
+# =============================================================================
+# Dynatrace ActiveGate Docker Compose
+# =============================================================================
+
+services:
+  activegate:
+    image: dynatrace/activegate:latest
+    container_name: dynatrace-activegate
+    hostname: activegate
+    restart: unless-stopped
+    
+    # Environment configuration
+    environment:
+      - DT_TENANT=${DT_TENANT_URL}
+      - DT_API_TOKEN=${DT_PAAS_TOKEN}
+      - DT_ACTIVEGATE_GROUP=${DT_ACTIVEGATE_GROUP:-aws-serverless}
+      
+      # Module configuration
+      - DT_CAPABILITIES=aws_monitoring,log_analytics,synthetic
+      
+      # Network configuration
+      - DT_NETWORK_ZONE=${DT_NETWORK_ZONE:-default}
+      
+      # Memory settings
+      - DT_MEMORY=${DT_MEMORY:-2G}
+    
+    # Port mappings
+    ports:
+      - "9999:9999"   # OneAgent communication
+      - "443:9999"    # HTTPS alias
+    
+    # Volume mounts
+    volumes:
+      - activegate-data:/var/lib/dynatrace/gateway
+      - activegate-log:/var/log/dynatrace/gateway
+      - activegate-config:/var/lib/dynatrace/gateway/config
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9999/rest/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+    
+    # Labels
+    labels:
+      - "com.dynatrace.component=activegate"
+      - "com.dynatrace.environment=${ENVIRONMENT:-production}"
+
+# =============================================================================
+# Volumes
+# =============================================================================
+
+volumes:
+  activegate-data:
+    driver: local
+  activegate-log:
+    driver: local
+  activegate-config:
+    driver: local
+
+# =============================================================================
+# Networks (optional - for multi-container setups)
+# =============================================================================
+
+networks:
+  default:
+    name: dynatrace-network
+    driver: bridge
+

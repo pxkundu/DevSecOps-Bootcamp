@@ -1,0 +1,157 @@
+{
+  "metadata": {
+    "configurationVersions": [7],
+    "clusterVersion": "1.285.0"
+  },
+  "dashboardMetadata": {
+    "name": "AWS API Gateway - Performance Dashboard",
+    "shared": true,
+    "owner": "platform-team",
+    "dashboardFilter": {
+      "timeframe": "-2h"
+    },
+    "tags": ["aws", "api-gateway", "serverless"]
+  },
+  "tiles": [
+    {
+      "name": "Dashboard Header",
+      "tileType": "MARKDOWN",
+      "configured": true,
+      "bounds": {"top": 0, "left": 0, "width": 1520, "height": 76},
+      "markdown": "## 🌐 AWS API Gateway Monitoring\n\n**Purpose**: Monitor API Gateway performance, latency, and error rates | [Runbook](https://wiki.example.com/api-gateway-runbook)"
+    },
+    {
+      "name": "Total Requests",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {"top": 76, "left": 0, "width": 304, "height": 152},
+      "queries": [
+        {
+          "id": "A",
+          "metricSelector": "builtin:cloud.aws.apigateway.count:splitBy():sum",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "thresholds": [{"rules": [{"color": "#7dc540"}]}]
+      }
+    },
+    {
+      "name": "Avg Latency",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {"top": 76, "left": 304, "width": 304, "height": 152},
+      "queries": [
+        {
+          "id": "A",
+          "metricSelector": "builtin:cloud.aws.apigateway.latency:splitBy():avg",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "thresholds": [{"rules": [{"value": 0, "color": "#7dc540"}, {"value": 500, "color": "#f5d30f"}, {"value": 1000, "color": "#dc172a"}]}]
+      }
+    },
+    {
+      "name": "4XX Errors",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {"top": 76, "left": 608, "width": 304, "height": 152},
+      "queries": [
+        {
+          "id": "A",
+          "metricSelector": "builtin:cloud.aws.apigateway.4xxError:splitBy():sum",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "thresholds": [{"rules": [{"value": 0, "color": "#7dc540"}, {"value": 10, "color": "#f5d30f"}, {"value": 100, "color": "#dc172a"}]}]
+      }
+    },
+    {
+      "name": "5XX Errors",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {"top": 76, "left": 912, "width": 304, "height": 152},
+      "queries": [
+        {
+          "id": "A",
+          "metricSelector": "builtin:cloud.aws.apigateway.5xxError:splitBy():sum",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "thresholds": [{"rules": [{"value": 0, "color": "#7dc540"}, {"value": 1, "color": "#f5d30f"}, {"value": 10, "color": "#dc172a"}]}]
+      }
+    },
+    {
+      "name": "Integration Latency",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {"top": 76, "left": 1216, "width": 304, "height": 152},
+      "queries": [
+        {
+          "id": "A",
+          "metricSelector": "builtin:cloud.aws.apigateway.integrationLatency:splitBy():avg",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {
+        "type": "SINGLE_VALUE",
+        "thresholds": [{"rules": [{"value": 0, "color": "#7dc540"}, {"value": 300, "color": "#f5d30f"}, {"value": 500, "color": "#dc172a"}]}]
+      }
+    },
+    {
+      "name": "Request Rate Over Time",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {"top": 228, "left": 0, "width": 760, "height": 304},
+      "queries": [
+        {
+          "id": "A",
+          "metricSelector": "builtin:cloud.aws.apigateway.count:splitBy(\"aws.apigateway.apiname\"):sum:auto:sort(value(sum,descending)):limit(10)",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {"type": "GRAPH_CHART"}
+    },
+    {
+      "name": "Latency Over Time",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {"top": 228, "left": 760, "width": 760, "height": 304},
+      "queries": [
+        {
+          "id": "A",
+          "metricSelector": "builtin:cloud.aws.apigateway.latency:splitBy(\"aws.apigateway.apiname\"):percentile(95):auto:sort(value(avg,descending)):limit(10)",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {"type": "GRAPH_CHART"}
+    },
+    {
+      "name": "Error Rate Over Time",
+      "tileType": "DATA_EXPLORER",
+      "configured": true,
+      "bounds": {"top": 532, "left": 0, "width": 1520, "height": 304},
+      "queries": [
+        {
+          "id": "A",
+          "metricSelector": "builtin:cloud.aws.apigateway.4xxError:splitBy(\"aws.apigateway.apiname\"):sum:auto:sort(value(sum,descending)):limit(10)",
+          "enabled": true
+        },
+        {
+          "id": "B",
+          "metricSelector": "builtin:cloud.aws.apigateway.5xxError:splitBy(\"aws.apigateway.apiname\"):sum:auto:sort(value(sum,descending)):limit(10)",
+          "enabled": true
+        }
+      ],
+      "visualConfig": {"type": "GRAPH_CHART"}
+    }
+  ]
+}
+

@@ -1,0 +1,188 @@
+{
+  "monitors": [
+    {
+      "name": "API Gateway - Health Check",
+      "type": "HTTP",
+      "enabled": true,
+      "frequencyMin": 5,
+      "locations": [
+        "GEOLOCATION-9999453BE4BDB3CD",
+        "GEOLOCATION-F86B5E1B1D3199FA"
+      ],
+      "anomalyDetection": {
+        "outageHandling": {
+          "globalOutage": true,
+          "globalOutagePolicy": {
+            "consecutiveRuns": 3
+          },
+          "localOutage": true,
+          "localOutagePolicy": {
+            "affectedLocations": 2,
+            "consecutiveRuns": 3
+          }
+        },
+        "loadingTimeThresholds": {
+          "enabled": true,
+          "thresholds": [
+            {
+              "type": "TOTAL",
+              "valueMs": 5000
+            }
+          ]
+        }
+      },
+      "script": {
+        "version": "1.0",
+        "requests": [
+          {
+            "description": "API Health Check",
+            "url": "https://api.example.com/health",
+            "method": "GET",
+            "requestBody": "",
+            "configuration": {
+              "acceptAnyCertificate": false,
+              "followRedirects": true
+            },
+            "validation": {
+              "rules": [
+                {
+                  "type": "httpStatusesList",
+                  "value": "200",
+                  "passIfFound": true
+                },
+                {
+                  "type": "responseBody",
+                  "value": "healthy",
+                  "passIfFound": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "tags": [
+        {
+          "key": "service",
+          "value": "api-gateway"
+        },
+        {
+          "key": "environment",
+          "value": "production"
+        },
+        {
+          "key": "team",
+          "value": "platform"
+        }
+      ],
+      "manuallyAssignedApps": []
+    },
+    {
+      "name": "Lambda Function URL - Orders API",
+      "type": "HTTP",
+      "enabled": true,
+      "frequencyMin": 10,
+      "locations": [
+        "GEOLOCATION-9999453BE4BDB3CD"
+      ],
+      "script": {
+        "version": "1.0",
+        "requests": [
+          {
+            "description": "Orders API Health",
+            "url": "https://xxx.lambda-url.us-east-1.on.aws/api/orders/health",
+            "method": "GET",
+            "validation": {
+              "rules": [
+                {
+                  "type": "httpStatusesList",
+                  "value": "200",
+                  "passIfFound": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "tags": [
+        {
+          "key": "service",
+          "value": "orders-api"
+        }
+      ]
+    },
+    {
+      "name": "Payment API - Multi-Step Test",
+      "type": "HTTP",
+      "enabled": true,
+      "frequencyMin": 15,
+      "locations": [
+        "GEOLOCATION-9999453BE4BDB3CD",
+        "GEOLOCATION-F86B5E1B1D3199FA"
+      ],
+      "script": {
+        "version": "1.0",
+        "requests": [
+          {
+            "description": "Step 1: Authenticate",
+            "url": "https://api.example.com/auth/token",
+            "method": "POST",
+            "requestBody": "{\"client_id\":\"synthetic-test\",\"grant_type\":\"client_credentials\"}",
+            "configuration": {
+              "headers": {
+                "Content-Type": "application/json"
+              }
+            },
+            "validation": {
+              "rules": [
+                {
+                  "type": "httpStatusesList",
+                  "value": "200",
+                  "passIfFound": true
+                }
+              ]
+            },
+            "postProcessing": {
+              "extractVariables": [
+                {
+                  "name": "access_token",
+                  "source": "response_body",
+                  "extractionRegex": "\"access_token\":\"([^\"]+)\""
+                }
+              ]
+            }
+          },
+          {
+            "description": "Step 2: Check Payment API",
+            "url": "https://api.example.com/payments/health",
+            "method": "GET",
+            "configuration": {
+              "headers": {
+                "Authorization": "Bearer {{access_token}}"
+              }
+            },
+            "validation": {
+              "rules": [
+                {
+                  "type": "httpStatusesList",
+                  "value": "200",
+                  "passIfFound": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "tags": [
+        {
+          "key": "service",
+          "value": "payment-api"
+        },
+        {
+          "key": "criticality",
+          "value": "high"
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,166 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynatrace-activegate
+  namespace: dynatrace
+  labels:
+    app: dynatrace-activegate
+    app.kubernetes.io/name: activegate
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: dynatrace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dynatrace-activegate
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: dynatrace-activegate
+        app.kubernetes.io/name: activegate
+      annotations:
+        prometheus.io/scrape: "false"
+    spec:
+      serviceAccountName: dynatrace-activegate
+      
+      # Security context
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+      
+      # Anti-affinity for HA
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - dynatrace-activegate
+                topologyKey: kubernetes.io/hostname
+      
+      containers:
+        - name: activegate
+          image: dynatrace/activegate:latest
+          imagePullPolicy: Always
+          
+          # Environment variables
+          env:
+            - name: DT_TENANT
+              valueFrom:
+                configMapKeyRef:
+                  name: dynatrace-activegate-config
+                  key: tenant-url
+            
+            - name: DT_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: dynatrace-credentials
+                  key: paas-token
+            
+            - name: DT_ACTIVEGATE_GROUP
+              valueFrom:
+                configMapKeyRef:
+                  name: dynatrace-activegate-config
+                  key: activegate-group
+            
+            - name: DT_CAPABILITIES
+              value: "aws_monitoring,log_analytics"
+            
+            - name: DT_NETWORK_ZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: dynatrace-activegate-config
+                  key: network-zone
+                  optional: true
+          
+          # Ports
+          ports:
+            - name: ag-port
+              containerPort: 9999
+              protocol: TCP
+          
+          # Resource limits
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "2Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+          
+          # Volume mounts
+          volumeMounts:
+            - name: activegate-data
+              mountPath: /var/lib/dynatrace/gateway
+            - name: activegate-log
+              mountPath: /var/log/dynatrace/gateway
+          
+          # Probes
+          livenessProbe:
+            httpGet:
+              path: /rest/health
+              port: 9999
+              scheme: HTTPS
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          
+          readinessProbe:
+            httpGet:
+              path: /rest/health
+              port: 9999
+              scheme: HTTPS
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          # Security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+      
+      # Volumes
+      volumes:
+        - name: activegate-data
+          emptyDir:
+            sizeLimit: 10Gi
+        - name: activegate-log
+          emptyDir:
+            sizeLimit: 5Gi
+      
+      # Tolerations for dedicated nodes
+      tolerations:
+        - key: "monitoring"
+          operator: "Equal"
+          value: "dynatrace"
+          effect: "NoSchedule"
+      
+      # Node selector (optional)
+      # nodeSelector:
+      #   node-role.kubernetes.io/monitoring: "true"
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dynatrace-activegate
+  namespace: dynatrace
+  labels:
+    app: dynatrace-activegate
+

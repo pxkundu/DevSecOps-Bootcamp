@@ -1,0 +1,108 @@
+{
+  "family": "dynatrace-activegate",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "4096",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/dynatrace-activegate-task-role",
+  
+  "containerDefinitions": [
+    {
+      "name": "activegate",
+      "image": "dynatrace/activegate:latest",
+      "essential": true,
+      
+      "portMappings": [
+        {
+          "containerPort": 9999,
+          "protocol": "tcp",
+          "hostPort": 9999
+        }
+      ],
+      
+      "environment": [
+        {
+          "name": "DT_CAPABILITIES",
+          "value": "aws_monitoring,log_analytics"
+        },
+        {
+          "name": "DT_ACTIVEGATE_GROUP",
+          "value": "aws-serverless-ecs"
+        }
+      ],
+      
+      "secrets": [
+        {
+          "name": "DT_TENANT",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:dynatrace/production/credentials:tenant_url::"
+        },
+        {
+          "name": "DT_API_TOKEN",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:dynatrace/production/credentials:paas_token::"
+        }
+      ],
+      
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/dynatrace-activegate",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "activegate",
+          "awslogs-create-group": "true"
+        }
+      },
+      
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:9999/rest/health || exit 1"],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 90
+      },
+      
+      "mountPoints": [
+        {
+          "sourceVolume": "activegate-data",
+          "containerPath": "/var/lib/dynatrace/gateway",
+          "readOnly": false
+        }
+      ],
+      
+      "ulimits": [
+        {
+          "name": "nofile",
+          "softLimit": 65536,
+          "hardLimit": 65536
+        }
+      ]
+    }
+  ],
+  
+  "volumes": [
+    {
+      "name": "activegate-data",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-xxxxxxxxx",
+        "rootDirectory": "/activegate",
+        "transitEncryption": "ENABLED"
+      }
+    }
+  ],
+  
+  "tags": [
+    {
+      "key": "Project",
+      "value": "dynatrace-monitoring"
+    },
+    {
+      "key": "Component",
+      "value": "activegate"
+    },
+    {
+      "key": "Environment",
+      "value": "production"
+    }
+  ]
+}
+

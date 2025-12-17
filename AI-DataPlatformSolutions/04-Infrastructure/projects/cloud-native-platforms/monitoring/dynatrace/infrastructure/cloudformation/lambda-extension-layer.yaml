@@ -1,0 +1,224 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Dynatrace Lambda Extension - IAM and configuration for Dynatrace Lambda monitoring'
+
+# =============================================================================
+# Parameters
+# =============================================================================
+Parameters:
+  Environment:
+    Type: String
+    Description: 'Deployment environment'
+    Default: 'production'
+    AllowedValues:
+      - dev
+      - staging
+      - production
+
+  DynatraceTenantId:
+    Type: String
+    Description: 'Dynatrace Tenant ID (e.g., abc12345)'
+    MinLength: 1
+
+  DynatraceTenantUrl:
+    Type: String
+    Description: 'Dynatrace Tenant URL (e.g., https://abc12345.live.dynatrace.com)'
+    AllowedPattern: '^https://.*\.dynatrace\.com$'
+
+  DynatracePaaSToken:
+    Type: String
+    Description: 'Dynatrace PaaS token for Lambda extension'
+    NoEcho: true
+    MinLength: 1
+
+  DynatraceLayerVersion:
+    Type: Number
+    Description: 'Version of the Dynatrace Lambda layer'
+    Default: 1
+    MinValue: 1
+
+  CreateSecretsManagerSecret:
+    Type: String
+    Description: 'Create Secrets Manager secret for Dynatrace credentials'
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  KMSKeyArn:
+    Type: String
+    Description: 'ARN of KMS key for secret encryption (optional)'
+    Default: ''
+
+# =============================================================================
+# Conditions
+# =============================================================================
+Conditions:
+  CreateSecret: !Equals [!Ref CreateSecretsManagerSecret, 'true']
+  UseCustomKMSKey: !Not [!Equals [!Ref KMSKeyArn, '']]
+
+# =============================================================================
+# Resources
+# =============================================================================
+Resources:
+  # ---------------------------------------------------------------------------
+  # Secrets Manager Secret for Dynatrace Credentials
+  # ---------------------------------------------------------------------------
+  DynatraceCredentialsSecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Condition: CreateSecret
+    Properties:
+      Name: !Sub 'dynatrace/${Environment}/lambda-extension'
+      Description: 'Dynatrace Lambda extension credentials'
+      KmsKeyId: !If [UseCustomKMSKey, !Ref KMSKeyArn, !Ref 'AWS::NoValue']
+      SecretString: !Sub |
+        {
+          "DT_TENANT": "${DynatraceTenantId}",
+          "DT_CONNECTION_BASE_URL": "${DynatraceTenantUrl}",
+          "DT_CONNECTION_AUTH_TOKEN": "${DynatracePaaSToken}"
+        }
+      Tags:
+        - Key: Name
+          Value: !Sub 'dynatrace-lambda-extension-${Environment}'
+        - Key: Project
+          Value: dynatrace-monitoring
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ---------------------------------------------------------------------------
+  # IAM Role for Lambda with Dynatrace Extension
+  # ---------------------------------------------------------------------------
+  LambdaDynatraceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub 'lambda-dynatrace-role-${Environment}'
+      Description: 'IAM role for Lambda functions with Dynatrace monitoring'
+      
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      
+      Tags:
+        - Key: Name
+          Value: !Sub 'lambda-dynatrace-role-${Environment}'
+        - Key: Project
+          Value: dynatrace-monitoring
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ---------------------------------------------------------------------------
+  # IAM Policy for Secrets Manager Access
+  # ---------------------------------------------------------------------------
+  LambdaSecretsAccessPolicy:
+    Type: 'AWS::IAM::Policy'
+    Condition: CreateSecret
+    Properties:
+      PolicyName: !Sub 'lambda-dynatrace-secrets-access-${Environment}'
+      Roles:
+        - !Ref LambdaDynatraceRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: SecretsManagerAccess
+            Effect: Allow
+            Action:
+              - 'secretsmanager:GetSecretValue'
+            Resource: !Ref DynatraceCredentialsSecret
+          
+          - Sid: KMSDecrypt
+            Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: !If [UseCustomKMSKey, !Ref KMSKeyArn, !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*']
+            Condition:
+              StringEquals:
+                'kms:ViaService': !Sub 'secretsmanager.${AWS::Region}.amazonaws.com'
+
+  # ---------------------------------------------------------------------------
+  # SSM Parameters for Lambda Configuration
+  # ---------------------------------------------------------------------------
+  DynatraceLayerArnParameter:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/dynatrace/${Environment}/lambda-layer-arn'
+      Description: 'Dynatrace Lambda Layer ARN for this region'
+      Type: String
+      Value: !Sub 'arn:aws:lambda:${AWS::Region}:725887861453:layer:Dynatrace_OneAgent:${DynatraceLayerVersion}'
+      Tags:
+        Project: dynatrace-monitoring
+        Environment: !Ref Environment
+
+  DynatraceTenantIdParameter:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/dynatrace/${Environment}/tenant-id'
+      Description: 'Dynatrace Tenant ID'
+      Type: String
+      Value: !Ref DynatraceTenantId
+      Tags:
+        Project: dynatrace-monitoring
+        Environment: !Ref Environment
+
+  DynatraceTenantUrlParameter:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/dynatrace/${Environment}/tenant-url'
+      Description: 'Dynatrace Tenant URL'
+      Type: String
+      Value: !Ref DynatraceTenantUrl
+      Tags:
+        Project: dynatrace-monitoring
+        Environment: !Ref Environment
+
+# =============================================================================
+# Outputs
+# =============================================================================
+Outputs:
+  LambdaRoleArn:
+    Description: 'ARN of the IAM role for Lambda functions'
+    Value: !GetAtt LambdaDynatraceRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaRoleArn'
+
+  LambdaRoleName:
+    Description: 'Name of the IAM role for Lambda functions'
+    Value: !Ref LambdaDynatraceRole
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaRoleName'
+
+  DynatraceLayerArn:
+    Description: 'ARN of the Dynatrace Lambda Layer'
+    Value: !Sub 'arn:aws:lambda:${AWS::Region}:725887861453:layer:Dynatrace_OneAgent:${DynatraceLayerVersion}'
+    Export:
+      Name: !Sub '${AWS::StackName}-LayerArn'
+
+  SecretsManagerSecretArn:
+    Description: 'ARN of the Secrets Manager secret'
+    Condition: CreateSecret
+    Value: !Ref DynatraceCredentialsSecret
+    Export:
+      Name: !Sub '${AWS::StackName}-SecretArn'
+
+  LambdaEnvironmentVariables:
+    Description: 'Environment variables to add to Lambda functions'
+    Value: !Sub |
+      DT_TENANT=${DynatraceTenantId}
+      DT_CLUSTER_ID=-1
+      DT_CONNECTION_BASE_URL=${DynatraceTenantUrl}
+      AWS_LAMBDA_EXEC_WRAPPER=/opt/dynatrace
+      DT_CONNECTION_AUTH_TOKEN=sm://dynatrace/${Environment}/lambda-extension:DT_CONNECTION_AUTH_TOKEN
+
+  SSMParameterLayerArn:
+    Description: 'SSM Parameter path for Layer ARN'
+    Value: !Ref DynatraceLayerArnParameter
+
+  SSMParameterTenantId:
+    Description: 'SSM Parameter path for Tenant ID'
+    Value: !Ref DynatraceTenantIdParameter
+

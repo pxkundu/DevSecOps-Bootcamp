@@ -1,0 +1,14 @@
+{
+  "type": "PAGER_DUTY",
+  "name": "AWS Serverless Critical - PagerDuty",
+  "active": true,
+  "alertingProfile": "REPLACE_WITH_CRITICAL_ALERTING_PROFILE_ID",
+  "account": "your-pagerduty-account",
+  "serviceApiKey": "REPLACE_WITH_PAGERDUTY_INTEGRATION_KEY",
+  "serviceName": "AWS Serverless Platform",
+  "customMessage": {
+    "title": "[{ProblemSeverity}] {ProblemTitle}",
+    "description": "Impact: {ProblemImpact}\nRoot Cause: {RootCauseEntity}\nAffected: {ImpactedEntities}\n\nView: {ProblemURL}"
+  }
+}
+

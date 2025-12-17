@@ -1,0 +1,180 @@
+{
+  "managementZones": [
+    {
+      "name": "AWS Serverless - Production",
+      "description": "All production serverless resources in AWS",
+      "rules": [
+        {
+          "type": "SERVICE",
+          "enabled": true,
+          "propagationTypes": ["SERVICE_TO_PROCESS_GROUP_LIKE", "SERVICE_TO_HOST_LIKE"],
+          "conditions": [
+            {
+              "key": {
+                "attribute": "AWS_LAMBDA_FUNCTION_NAME"
+              },
+              "comparisonInfo": {
+                "type": "STRING",
+                "operator": "CONTAINS",
+                "value": "prod",
+                "negate": false,
+                "caseSensitive": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "AWS_LAMBDA_FUNCTION",
+          "enabled": true,
+          "propagationTypes": [],
+          "conditions": [
+            {
+              "key": {
+                "attribute": "AWS_ACCOUNT_ID"
+              },
+              "comparisonInfo": {
+                "type": "STRING",
+                "operator": "EQUALS",
+                "value": "REPLACE_WITH_PROD_ACCOUNT_ID",
+                "negate": false,
+                "caseSensitive": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "CUSTOM_DEVICE",
+          "enabled": true,
+          "propagationTypes": [],
+          "conditions": [
+            {
+              "key": {
+                "attribute": "CUSTOM_DEVICE_NAME"
+              },
+              "comparisonInfo": {
+                "type": "STRING",
+                "operator": "CONTAINS",
+                "value": "API Gateway",
+                "negate": false,
+                "caseSensitive": false
+              }
+            }
+          ]
+        }
+      ],
+      "dimensionalRules": [
+        {
+          "enabled": true,
+          "appliesTo": "METRIC",
+          "conditions": [
+            {
+              "conditionType": "DIMENSION",
+              "ruleMatcher": "BEGINS_WITH",
+              "key": "aws.account.id",
+              "value": "REPLACE_WITH_PROD_ACCOUNT_ID"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AWS Serverless - Development",
+      "description": "All development serverless resources",
+      "rules": [
+        {
+          "type": "SERVICE",
+          "enabled": true,
+          "propagationTypes": [],
+          "conditions": [
+            {
+              "key": {
+                "attribute": "AWS_LAMBDA_FUNCTION_NAME"
+              },
+              "comparisonInfo": {
+                "type": "STRING",
+                "operator": "CONTAINS",
+                "value": "dev",
+                "negate": false,
+                "caseSensitive": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AWS Serverless - Staging",
+      "description": "All staging serverless resources",
+      "rules": [
+        {
+          "type": "SERVICE",
+          "enabled": true,
+          "propagationTypes": [],
+          "conditions": [
+            {
+              "key": {
+                "attribute": "AWS_LAMBDA_FUNCTION_NAME"
+              },
+              "comparisonInfo": {
+                "type": "STRING",
+                "operator": "CONTAINS",
+                "value": "staging",
+                "negate": false,
+                "caseSensitive": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Critical Business Services",
+      "description": "Business-critical Lambda functions (payment, order, auth)",
+      "rules": [
+        {
+          "type": "SERVICE",
+          "enabled": true,
+          "propagationTypes": ["SERVICE_TO_PROCESS_GROUP_LIKE"],
+          "conditions": [
+            {
+              "key": {
+                "attribute": "SERVICE_TAGS",
+                "type": "TAG"
+              },
+              "comparisonInfo": {
+                "type": "TAG",
+                "operator": "EQUALS",
+                "value": {
+                  "context": "CONTEXTLESS",
+                  "key": "criticality",
+                  "value": "high"
+                },
+                "negate": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "AWS_LAMBDA_FUNCTION",
+          "enabled": true,
+          "propagationTypes": [],
+          "conditions": [
+            {
+              "key": {
+                "attribute": "AWS_LAMBDA_FUNCTION_NAME"
+              },
+              "comparisonInfo": {
+                "type": "STRING_COMPARISON",
+                "operator": "REGEX_MATCHES",
+                "value": ".*(payment|order|auth|checkout).*",
+                "negate": false,
+                "caseSensitive": false
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
